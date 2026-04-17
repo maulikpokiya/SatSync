@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
   LayoutDashboard,
@@ -46,6 +47,8 @@ const ADMIN_ITEMS = [
 export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   async function handleSignOut() {
     await signOut({ callbackUrl: '/login' })
@@ -120,8 +123,8 @@ export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
           onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors"
         >
-          {resolvedTheme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
-          {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+          {mounted && resolvedTheme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+          {mounted && resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
       </div>
 
