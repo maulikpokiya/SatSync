@@ -5,7 +5,9 @@
 
 import { getSheetsClient, SHEET_ID, TABS } from './client'
 import type { AppRole, User } from '@/types'
+import { DEMO_USER } from './mock-data'
 
+const DEMO_MODE = !process.env.GOOGLE_SHEET_ID
 const RANGE = `${TABS.users}!A:H`
 
 function rowToUser(row: string[]): User {
@@ -23,6 +25,7 @@ function rowToUser(row: string[]): User {
 
 /** Fetch all users (skips the header row). */
 export async function getAllUsers(): Promise<User[]> {
+  if (DEMO_MODE) return [DEMO_USER]
   const sheets = getSheetsClient()
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: RANGE })
   const rows = res.data.values ?? []
@@ -46,6 +49,7 @@ export async function getUserById(id: string): Promise<User | null> {
  * Otherwise append a new row. Returns the user.
  */
 export async function upsertUser(data: Partial<User> & { email: string; id: string }): Promise<User> {
+  if (DEMO_MODE) return DEMO_USER
   const sheets = getSheetsClient()
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: RANGE })
   const rows = res.data.values ?? []
@@ -102,6 +106,7 @@ export async function upsertUser(data: Partial<User> & { email: string; id: stri
 
 /** Update specific fields on a user row. */
 export async function updateUser(id: string, updates: { display_name?: string | null; home_timezone?: string; role?: AppRole | null }): Promise<void> {
+  if (DEMO_MODE) return
   const sheets = getSheetsClient()
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: RANGE })
   const rows = res.data.values ?? []

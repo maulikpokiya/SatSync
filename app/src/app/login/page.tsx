@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth/config'
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
+import { DemoLoginButton } from '@/components/auth/DemoLoginButton'
 
 export const metadata: Metadata = { title: 'Sign In — SatSync' }
 
@@ -24,9 +25,15 @@ export default async function LoginPage() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
-          <GoogleSignInButton />
+          {process.env.GOOGLE_CLIENT_ID ? (
+            <GoogleSignInButton />
+          ) : (
+            <DemoLoginButton />
+          )}
           <p className="text-center text-xs text-muted-foreground">
-            Contact your administrator if you need access.
+            {process.env.GOOGLE_CLIENT_ID
+              ? 'Contact your administrator if you need access.'
+              : 'Running in demo mode — no setup required.'}
           </p>
         </div>
       </div>

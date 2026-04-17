@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import {
   LayoutDashboard,
   Calendar,
@@ -11,6 +12,8 @@ import {
   Settings,
   LogOut,
   Shield,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -42,6 +45,7 @@ const ADMIN_ITEMS = [
 
 export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
   const pathname = usePathname()
+  const { resolvedTheme, setTheme } = useTheme()
 
   async function handleSignOut() {
     await signOut({ callbackUrl: '/login' })
@@ -109,6 +113,17 @@ export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
           </>
         )}
       </nav>
+
+      {/* Theme toggle */}
+      <div className="px-4 pb-2">
+        <button
+          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors"
+        >
+          {resolvedTheme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+          {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
+      </div>
 
       {/* User Menu */}
       <div className="border-t border-sidebar-border p-3">

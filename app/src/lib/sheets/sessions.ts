@@ -9,7 +9,9 @@
 import { randomUUID } from 'crypto'
 import { getSheetsClient, SHEET_ID } from './client'
 import type { Session, SessionStatus, AudienceType, CategoryId } from '@/types'
+import { MOCK_SESSIONS } from './mock-data'
 
+const DEMO_MODE = !process.env.GOOGLE_SHEET_ID
 const TAB = 'sessions'
 const RANGE = `${TAB}!A:T`
 const HEADER = [
@@ -51,6 +53,14 @@ async function getRows() {
 }
 
 export async function getSessionsByEvent(eventId: string): Promise<Session[]> {
+  if (DEMO_MODE) {
+    return MOCK_SESSIONS
+      .filter((s) => s.event_id === eventId && s.status !== 'cancelled')
+      .sort((a, b) => {
+        if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time)
+        return a.sort_order - b.sort_order
+      })
+  }
   const { rows } = await getRows()
   return rows
     .slice(1)
@@ -63,6 +73,7 @@ export async function getSessionsByEvent(eventId: string): Promise<Session[]> {
 }
 
 export async function getSessionById(id: string): Promise<Session | null> {
+  if (DEMO_MODE) return MOCK_SESSIONS.find((s) => s.id === id) ?? null
   const { rows } = await getRows()
   const row = rows.slice(1).find((r) => r[0] === id)
   return row ? rowToSession(row) : null
@@ -71,6 +82,10 @@ export async function getSessionById(id: string): Promise<Session | null> {
 export async function createSession(
   data: Omit<Session, 'id' | 'created_at' | 'updated_at'> & { created_by: string }
 ): Promise<Session> {
+  if (DEMO_MODE) {
+    const now = new Date().toISOString()
+    return { id: randomUUID(), ...data, created_at: now, updated_at: now }
+  }
   const { rows, sheets } = await getRows()
   const now = new Date().toISOString()
   const id = randomUUID()
@@ -121,6 +136,7 @@ export async function updateSession(
   id: string,
   updates: Partial<Omit<Session, 'id' | 'event_id' | 'created_at' | 'created_by'>>
 ): Promise<void> {
+  if (DEMO_MODE) return
   const { rows, sheets } = await getRows()
   const rowIndex = rows.findIndex((r, i) => i > 0 && r[0] === id)
   if (rowIndex < 0) throw new Error(`Session ${id} not found`)

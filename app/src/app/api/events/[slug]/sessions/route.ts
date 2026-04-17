@@ -35,6 +35,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     virtual_link?: string | null
     status?: SessionStatus
     is_common?: boolean
+    color_override?: string | null
   }
 
   if (!body.title?.trim()) {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     virtual_link: body.virtual_link ?? null,
     status: body.status ?? 'draft',
     is_common: body.is_common ?? true,
-    color_override: null,
+    color_override: body.color_override ?? null,
     sort_order: 0,
     created_by: profile!.id,
   })

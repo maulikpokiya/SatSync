@@ -74,8 +74,10 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
   const [description, setDescription] = useState('')
   const [objectives, setObjectives] = useState('')
   const [prerequisites, setPrerequisites] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [startClock, setStartClock] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [endClock, setEndClock] = useState('')
   const [category, setCategory] = useState<CategoryId | ''>('')
   const [audienceType, setAudienceType] = useState<AudienceType>('all')
   const [audienceValues, setAudienceValues] = useState<string[]>([])
@@ -83,6 +85,7 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
   const [virtualLink, setVirtualLink] = useState('')
   const [status, setStatus] = useState<SessionStatus>('draft')
   const [isCommon, setIsCommon] = useState(true)
+  const [colorOverride, setColorOverride] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -90,8 +93,12 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       setDescription(session?.description ?? '')
       setObjectives(session?.objectives ?? '')
       setPrerequisites(session?.prerequisites ?? '')
-      setStartTime(toLocalInput(session?.start_time, eventTimezone))
-      setEndTime(toLocalInput(session?.end_time, eventTimezone))
+      const startLocal = toLocalInput(session?.start_time, eventTimezone)
+      setStartDate(startLocal.split('T')[0] ?? '')
+      setStartClock(startLocal.split('T')[1] ?? '')
+      const endLocal = toLocalInput(session?.end_time, eventTimezone)
+      setEndDate(endLocal.split('T')[0] ?? '')
+      setEndClock(endLocal.split('T')[1] ?? '')
       setCategory((session?.category ?? '') as CategoryId | '')
       setAudienceType(session?.audience_type ?? 'all')
       setAudienceValues(session?.audience_values ?? [])
@@ -99,6 +106,7 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       setVirtualLink(session?.virtual_link ?? '')
       setStatus(session?.status ?? 'draft')
       setIsCommon(session?.is_common ?? true)
+      setColorOverride(session?.color_override ?? '')
     }
   }, [open, session, eventTimezone])
 
@@ -116,11 +124,12 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
     const payload = {
       title: title.trim(), description: description || null,
       objectives: objectives || null, prerequisites: prerequisites || null,
-      start_time: toUtcIso(startTime, eventTimezone) || null,
-      end_time: toUtcIso(endTime, eventTimezone) || null,
+      start_time: startDate ? toUtcIso(`${startDate}T${startClock || '00:00'}`, eventTimezone) || null : null,
+      end_time: endDate ? toUtcIso(`${endDate}T${endClock || '00:00'}`, eventTimezone) || null : null,
       category: category || null, audience_type: audienceType,
       audience_values: audienceValues, room: room || null,
       virtual_link: virtualLink || null, status, is_common: isCommon,
+      color_override: colorOverride || null,
     }
 
     const url = session
@@ -164,32 +173,55 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
               <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Satsang Sabha — Katha" required />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="s-start">Start ({eventTimezone.split('/')[1]?.replace('_', ' ')})</Label>
-                <Input id="s-start" type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            <div className="space-y-2">
+              <Label>Start ({eventTimezone.split('/')[1]?.replace(/_/g, ' ')})</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="time" value={startClock} onChange={(e) => setStartClock(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="s-end">End</Label>
-                <Input id="s-end" type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>End</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Input type="time" value={endClock} onChange={(e) => setEndClock(e.target.value)} />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="s-cat">Category</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as CategoryId)}>
-                <SelectTrigger id="s-cat"><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="flex items-center gap-2">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-                        {c.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={category} onValueChange={(v) => setCategory(v as CategoryId)}>
+                  <SelectTrigger id="s-cat"><SelectValue placeholder="Select category" /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                          {c.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {category && (
+                  <input
+                    type="color"
+                    value={colorOverride || selectedCat?.color || '#000000'}
+                    onChange={(e) => setColorOverride(e.target.value)}
+                    title="Override category color"
+                    className="h-10 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1"
+                  />
+                )}
+              </div>
+              {colorOverride && (
+                <p className="text-xs text-muted-foreground">
+                  Custom color active ·{' '}
+                  <button type="button" onClick={() => setColorOverride('')} className="underline hover:text-foreground">
+                    Reset to default
+                  </button>
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -44,6 +44,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     virtual_link?: string | null
     status?: SessionStatus
     is_common?: boolean
+    color_override?: string | null
   }
 
   await updateSession(params.id, {
@@ -60,6 +61,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     virtual_link: body.virtual_link,
     status: body.status,
     is_common: body.is_common,
+    color_override: body.color_override,
   })
 
   return NextResponse.json({ ok: true })

@@ -7,7 +7,9 @@
 import { randomUUID } from 'crypto'
 import { getSheetsClient, SHEET_ID, TABS } from './client'
 import type { Event, EventStatus } from '@/types'
+import { MOCK_EVENTS } from './mock-data'
 
+const DEMO_MODE = !process.env.GOOGLE_SHEET_ID
 const RANGE = `${TABS.events}!A:J`
 const HEADER = ['id','title','slug','status','start_date','end_date','primary_timezone','created_by','created_at','updated_at']
 
@@ -43,28 +45,33 @@ async function getRows(): Promise<{ rows: string[][]; sheets: ReturnType<typeof 
 }
 
 export async function getAllEvents(): Promise<Event[]> {
+  if (DEMO_MODE) return MOCK_EVENTS.filter((e) => e.status !== 'archived')
   const { rows } = await getRows()
   return rows.slice(1).filter((r) => r[0] && r[3] !== 'archived').map(rowToEvent)
 }
 
 export async function getAllEventsIncludingArchived(): Promise<Event[]> {
+  if (DEMO_MODE) return MOCK_EVENTS
   const { rows } = await getRows()
   return rows.slice(1).filter((r) => r[0]).map(rowToEvent)
 }
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
+  if (DEMO_MODE) return MOCK_EVENTS.find((e) => e.slug === slug) ?? null
   const { rows } = await getRows()
   const row = rows.slice(1).find((r) => r[2] === slug)
   return row ? rowToEvent(row) : null
 }
 
 export async function getEventById(id: string): Promise<Event | null> {
+  if (DEMO_MODE) return MOCK_EVENTS.find((e) => e.id === id) ?? null
   const { rows } = await getRows()
   const row = rows.slice(1).find((r) => r[0] === id)
   return row ? rowToEvent(row) : null
 }
 
 export async function getPublishedEvents(): Promise<Event[]> {
+  if (DEMO_MODE) return MOCK_EVENTS.filter((e) => e.status === 'published')
   const { rows } = await getRows()
   return rows.slice(1).filter((r) => r[3] === 'published').map(rowToEvent)
 }
@@ -72,6 +79,10 @@ export async function getPublishedEvents(): Promise<Event[]> {
 export async function createEvent(
   data: Pick<Event, 'title' | 'slug' | 'status' | 'start_date' | 'end_date' | 'primary_timezone'> & { created_by: string }
 ): Promise<Event> {
+  if (DEMO_MODE) {
+    const now = new Date().toISOString()
+    return { id: randomUUID(), ...data, created_at: now, updated_at: now }
+  }
   const { rows, sheets } = await getRows()
   const now = new Date().toISOString()
   const id = randomUUID()
@@ -112,6 +123,7 @@ export async function updateEvent(
   id: string,
   updates: Partial<Pick<Event, 'title' | 'slug' | 'status' | 'start_date' | 'end_date' | 'primary_timezone'>>
 ): Promise<void> {
+  if (DEMO_MODE) return
   const { rows, sheets } = await getRows()
   const rowIndex = rows.findIndex((r, i) => i > 0 && r[0] === id)
   if (rowIndex < 0) throw new Error(`Event ${id} not found`)
