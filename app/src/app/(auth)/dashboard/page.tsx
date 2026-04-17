@@ -1,26 +1,15 @@
 import { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { getAllEvents } from '@/lib/sheets/events'
 import { Topbar } from '@/components/layout/Topbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, Plus } from 'lucide-react'
+import type { Event } from '@/types'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-
-  // Fetch events the user has a role on (or all published events)
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .order('start_date', { ascending: false })
-
-  const eventCount = events?.length ?? 0
+  const events = await getAllEvents()
 
   return (
     <>
@@ -31,14 +20,14 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground mt-1">Manage your events and programs</p>
         </div>
 
-        {eventCount === 0 ? (
+        {events.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <Calendar className="h-12 w-12 text-muted-foreground/40 mb-4" />
               <CardTitle className="text-lg mb-2">No events yet</CardTitle>
               <CardDescription className="max-w-sm mb-6">
-                Create your first event to start building your program agenda. You can add sessions,
-                speakers, and rooms once the event is set up.
+                Add rows to the <strong>events</strong> tab in your Google Sheet, or create an
+                event through the app once Phase 2 is built.
               </CardDescription>
               <Button disabled>
                 <Plus className="mr-2 h-4 w-4" />
@@ -49,7 +38,7 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events?.map((event: (typeof events)[number]) => (
+            {events.map((event: Event) => (
               <Card key={event.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -73,10 +62,10 @@ export default async function DashboardPage() {
                           day: 'numeric',
                           year: 'numeric',
                         })
-                      : 'Dates TBD'}{' '}
+                      : 'Dates TBD'}
                     {event.end_date &&
                       event.end_date !== event.start_date &&
-                      `— ${new Date(event.end_date).toLocaleDateString('en-US', {
+                      ` — ${new Date(event.end_date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',

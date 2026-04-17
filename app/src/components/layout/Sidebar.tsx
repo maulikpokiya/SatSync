@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Calendar,
@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { createClient } from '@/lib/supabase/client'
+import { signOut } from 'next-auth/react'
 import type { User, AppRole } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -42,13 +42,9 @@ const ADMIN_ITEMS = [
 
 export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    await signOut({ callbackUrl: '/login' })
   }
 
   const initials = (user.display_name ?? user.email)

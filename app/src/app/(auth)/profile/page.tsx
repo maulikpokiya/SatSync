@@ -1,29 +1,21 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth/config'
+import { getUserByEmail } from '@/lib/sheets/users'
 import { Topbar } from '@/components/layout/Topbar'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileForm } from './ProfileForm'
 
 export const metadata: Metadata = { title: 'Profile' }
 
 export default async function ProfilePage() {
-  const supabase = await createClient()
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) redirect('/login')
 
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-
-  if (!authUser) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', authUser.id)
-    .single()
-
-  if (!profile) redirect('/login?error=profile_missing')
+  const profile = await getUserByEmail(session.user.email)
+  if (!profile) redirect('/login')
 
   const initials = (profile.display_name ?? profile.email)
     .split(/[\s@]/)
@@ -44,7 +36,7 @@ export default async function ProfilePage() {
           <CardHeader>
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.display_name ?? ''} />
+                <AvatarImage src={profile.avatar_url ?? undefined} />
                 <AvatarFallback className="text-xl">{initials}</AvatarFallback>
               </Avatar>
               <div>
@@ -59,32 +51,22 @@ export default async function ProfilePage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Account Info</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Account Info</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Member since</span>
-              <span>
-                {new Date(profile.created_at).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
+              <span>{new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
             </div>
             {profile.last_login && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Last sign in</span>
-                <span>
-                  {new Date(profile.last_login).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <span>{new Date(profile.last_login).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            )}
+            {profile.role && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Role</span>
+                <span className="capitalize">{profile.role.replace('_', ' ')}</span>
               </div>
             )}
           </CardContent>
