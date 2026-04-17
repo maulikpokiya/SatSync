@@ -73,3 +73,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  .no-print { display: none !important; }
+
+  body { background: white; color: black; font-size: 11pt; }
+
+  header { border-bottom: 1pt solid #ccc; padding-bottom: 8pt; margin-bottom: 12pt; }
+
+  /* Each day section starts on a new page after the first */
+  [data-print-day] + [data-print-day] { page-break-before: always; }
+
+  /* Session cards: flat, no shadows */
+  .print-session {
+    border: 1pt solid #ddd;
+    border-left-width: 3pt;
+    margin-bottom: 6pt;
+    padding: 6pt 8pt;
+    break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  button, a[href="/login"] { display: none !important; }
+
+  footer { margin-top: 24pt; border-top: 1pt solid #ccc; padding-top: 8pt; font-size: 9pt; color: #666; }
+}
