@@ -1,23 +1,8 @@
 export type {
-  AppRole,
-  EventStatus,
-  AuditAction,
-  User,
-  Event,
-  UserRole,
-  AuditLog,
-  UserWithRoles,
-  UserRoleWithUser,
+  AppRole, EventStatus, SessionStatus, AudienceType, CategoryId,
+  User, Event, Session,
 } from './database'
 
-export interface AuthUser {
-  id: string
-  email: string
-  profile: import('./database').User | null
-  globalRole: import('./database').AppRole | null
-}
-
-// Helper: role hierarchy for comparisons
 export const ROLE_HIERARCHY: Record<import('./database').AppRole, number> = {
   super_admin: 4,
   event_admin: 3,
@@ -26,7 +11,7 @@ export const ROLE_HIERARCHY: Record<import('./database').AppRole, number> = {
 }
 
 export function hasRole(
-  userRole: import('./database').AppRole | null,
+  userRole: import('./database').AppRole | null | undefined,
   requiredRole: import('./database').AppRole
 ): boolean {
   if (!userRole) return false

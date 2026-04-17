@@ -14,12 +14,7 @@ const ROLES: { value: AppRole; label: string }[] = [
   { value: 'viewer', label: 'Viewer' },
 ]
 
-interface AssignRoleFormProps {
-  userId: string
-  currentRole: AppRole | null
-}
-
-export function AssignRoleForm({ userId, currentRole }: AssignRoleFormProps) {
+export function AssignRoleForm({ userId, currentRole }: { userId: string; currentRole: AppRole | null }) {
   const [role, setRole] = useState<AppRole | ''>(currentRole ?? '')
   const [saving, setSaving] = useState(false)
   const router = useRouter()
@@ -27,18 +22,16 @@ export function AssignRoleForm({ userId, currentRole }: AssignRoleFormProps) {
   async function handleAssign() {
     if (!role) return
     setSaving(true)
-
     const res = await fetch('/api/admin/assign-role', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, role }),
     })
-
     const body = await res.json()
     if (!res.ok) {
       toast.error('Failed to assign role', { description: body.error })
     } else {
-      toast.success(`Role updated to ${role}`)
+      toast.success(`Role updated to ${role.replace('_', ' ')}`)
       router.refresh()
     }
     setSaving(false)
@@ -46,13 +39,11 @@ export function AssignRoleForm({ userId, currentRole }: AssignRoleFormProps) {
 
   async function handleRevoke() {
     setSaving(true)
-
     const res = await fetch('/api/admin/assign-role', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     })
-
     const body = await res.json()
     if (!res.ok) {
       toast.error('Failed to revoke role', { description: body.error })
@@ -72,29 +63,15 @@ export function AssignRoleForm({ userId, currentRole }: AssignRoleFormProps) {
         </SelectTrigger>
         <SelectContent>
           {ROLES.map((r) => (
-            <SelectItem key={r.value} value={r.value} className="text-xs">
-              {r.label}
-            </SelectItem>
+            <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-8 text-xs"
-        onClick={handleAssign}
-        disabled={saving || !role}
-      >
+      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleAssign} disabled={saving || !role}>
         Assign
       </Button>
       {currentRole && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 text-xs text-destructive hover:text-destructive"
-          onClick={handleRevoke}
-          disabled={saving}
-        >
+        <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:text-destructive" onClick={handleRevoke} disabled={saving}>
           Revoke
         </Button>
       )}

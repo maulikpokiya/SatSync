@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
 import {
   LayoutDashboard,
   Calendar,
@@ -11,6 +13,8 @@ import {
   Settings,
   LogOut,
   Shield,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -21,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { createClient } from '@/lib/supabase/client'
+import { signOut } from 'next-auth/react'
 import type { User, AppRole } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -42,13 +46,12 @@ const ADMIN_ITEMS = [
 
 export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    await signOut({ callbackUrl: '/login' })
   }
 
   const initials = (user.display_name ?? user.email)
@@ -113,6 +116,17 @@ export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
           </>
         )}
       </nav>
+
+      {/* Theme toggle */}
+      <div className="px-4 pb-2">
+        <button
+          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors"
+        >
+          {mounted && resolvedTheme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+          {mounted && resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
+      </div>
 
       {/* User Menu */}
       <div className="border-t border-sidebar-border p-3">

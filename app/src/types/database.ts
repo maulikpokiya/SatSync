@@ -1,28 +1,29 @@
 export type AppRole = 'super_admin' | 'event_admin' | 'editor' | 'viewer'
 export type EventStatus = 'draft' | 'published' | 'archived'
-export type AuditAction =
-  | 'login'
-  | 'logout'
-  | 'created'
-  | 'updated'
-  | 'deleted'
-  | 'role_assigned'
-  | 'role_revoked'
-  | 'speaker_confirmed'
-  | 'speaker_declined'
-  | 'attendee_checked_in'
-  | 'export_generated'
+export type SessionStatus = 'draft' | 'confirmed' | 'cancelled' | 'postponed'
+export type AudienceType = 'all' | 'age' | 'gender' | 'region' | 'custom'
+export type CategoryId =
+  | 'adhyatmik'
+  | 'vyavharik'
+  | 'free_time'
+  | 'aaram'
+  | 'meals'
+  | 'announcements'
+  | 'travel'
 
+/** Matches the columns in the `users` sheet tab */
 export interface User {
   id: string
-  display_name: string | null
   email: string
-  avatar_url: string | null
+  display_name: string | null
+  role: AppRole | null
   home_timezone: string
+  avatar_url: string | null
   created_at: string
   last_login: string | null
 }
 
+/** Matches the columns in the `events` sheet tab */
 export interface Event {
   id: string
   title: string
@@ -36,32 +37,26 @@ export interface Event {
   updated_at: string
 }
 
-export interface UserRole {
+/** Matches the columns in the `sessions` sheet tab */
+export interface Session {
   id: string
-  user_id: string
-  role: AppRole
-  event_id: string | null
+  event_id: string
+  title: string
+  description: string | null
+  objectives: string | null
+  prerequisites: string | null
+  start_time: string | null        // ISO 8601 UTC e.g. "2025-07-04T14:00:00Z"
+  end_time: string | null
+  category: CategoryId | null
+  audience_type: AudienceType
+  audience_values: string[]        // parsed from comma-separated sheet cell
+  room: string | null
+  virtual_link: string | null
+  status: SessionStatus
+  is_common: boolean
+  color_override: string | null
+  sort_order: number
+  created_by: string | null
   created_at: string
-}
-
-export interface AuditLog {
-  id: string
-  user_id: string | null
-  action: AuditAction | string
-  entity_type: string | null
-  entity_id: string | null
-  old_value: Record<string, unknown> | null
-  new_value: Record<string, unknown> | null
-  ip_address: string | null
-  user_agent: string | null
-  created_at: string
-}
-
-// Joined types used in UI
-export interface UserWithRoles extends User {
-  roles: UserRole[]
-}
-
-export interface UserRoleWithUser extends UserRole {
-  user: User
+  updated_at: string
 }
