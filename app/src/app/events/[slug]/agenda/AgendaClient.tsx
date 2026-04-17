@@ -22,13 +22,6 @@ function formatTime(utcIso: string | null, tz: string): string {
   })
 }
 
-function hexAlpha(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
-
 function groupByDay(sessions: Session[], tz: string): Map<string, Session[]> {
   const map = new Map<string, Session[]>()
   for (const s of sessions) {
@@ -101,15 +94,11 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
               <div className="space-y-2">
                 {grouped.get(day)!.map((s) => {
                   const cat = s.category ? CATEGORY_MAP[s.category] : null
-                  const accentColor = s.color_override || cat?.color
-                  const cardBg = s.color_override
-                    ? hexAlpha(s.color_override, 0.1)
-                    : cat ? cat.bg + '66' : undefined
                   return (
                     <div
                       key={s.id}
                       className="group flex items-start gap-4 rounded-lg border p-3 hover:bg-muted/30 transition-colors"
-                      style={accentColor ? { borderLeftWidth: 3, borderLeftColor: accentColor, backgroundColor: cardBg } : undefined}
+                      style={cat ? { borderLeftWidth: 3, borderLeftColor: cat.color, backgroundColor: cat.bg + '66' } : undefined}
                     >
                       {/* Time */}
                       <div className="w-28 shrink-0 text-xs text-muted-foreground pt-0.5 font-medium">
@@ -131,7 +120,7 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {cat && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: cat.bg, color: cat.text, border: `1px solid ${(accentColor ?? cat.color)}40` }}>
+                            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: cat.bg, color: cat.text, border: `1px solid ${cat.color}40` }}>
                               {cat.label}
                             </span>
                           )}

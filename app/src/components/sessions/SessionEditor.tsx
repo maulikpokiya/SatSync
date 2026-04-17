@@ -85,7 +85,6 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
   const [virtualLink, setVirtualLink] = useState('')
   const [status, setStatus] = useState<SessionStatus>('draft')
   const [isCommon, setIsCommon] = useState(true)
-  const [colorOverride, setColorOverride] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -106,7 +105,6 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       setVirtualLink(session?.virtual_link ?? '')
       setStatus(session?.status ?? 'draft')
       setIsCommon(session?.is_common ?? true)
-      setColorOverride(session?.color_override ?? '')
     }
   }, [open, session, eventTimezone])
 
@@ -129,7 +127,6 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       category: category || null, audience_type: audienceType,
       audience_values: audienceValues, room: room || null,
       virtual_link: virtualLink || null, status, is_common: isCommon,
-      color_override: colorOverride || null,
     }
 
     const url = session
@@ -190,38 +187,19 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
 
             <div className="space-y-2">
               <Label htmlFor="s-cat">Category</Label>
-              <div className="flex gap-2">
-                <Select value={category} onValueChange={(v) => setCategory(v as CategoryId)}>
-                  <SelectTrigger id="s-cat"><SelectValue placeholder="Select category" /></SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-2">
-                          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-                          {c.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {category && (
-                  <input
-                    type="color"
-                    value={colorOverride || selectedCat?.color || '#000000'}
-                    onChange={(e) => setColorOverride(e.target.value)}
-                    title="Override category color"
-                    className="h-10 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1"
-                  />
-                )}
-              </div>
-              {colorOverride && (
-                <p className="text-xs text-muted-foreground">
-                  Custom color active ·{' '}
-                  <button type="button" onClick={() => setColorOverride('')} className="underline hover:text-foreground">
-                    Reset to default
-                  </button>
-                </p>
-              )}
+              <Select value={category} onValueChange={(v) => setCategory(v as CategoryId)}>
+                <SelectTrigger id="s-cat"><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                        {c.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
