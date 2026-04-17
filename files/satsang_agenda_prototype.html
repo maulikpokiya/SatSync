@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);font-size:14px}
+.app{display:flex;flex-direction:column;height:100vh;min-height:700px}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 16px;height:52px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.logo{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.logo span{color:#534AB7}
+.event-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer}
+.event-pill .dot{width:7px;height:7px;border-radius:50%;background:#1D9E75}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tz-select{font-size:12px;padding:4px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer}
+.avatar{width:30px;height:30px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#534AB7;cursor:pointer}
+.body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;flex-shrink:0;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;padding:12px 0}
+.sidebar-section{padding:4px 12px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-top:12px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);border-radius:0}
+.nav-item:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.nav-item.active{background:#EEEDFE;color:#3C3489;font-weight:500}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;flex-wrap:wrap}
+.day-tabs{display:flex;gap:4px}
+.day-tab{padding:5px 12px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary)}
+.day-tab.active{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:500}
+.view-btns{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.view-btn{padding:5px 11px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary);border:none;border-right:0.5px solid var(--color-border-secondary)}
+.view-btn:last-child{border-right:none}
+.view-btn.active{background:#534AB7;color:#fff}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap}
+.filter-chip{padding:3px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary)}
+.filter-chip.active{border-color:currentColor}
+.filter-chip.f-all.active{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.filter-chip.f-adhyatmik.active{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.filter-chip.f-vyavharik.active{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
+.filter-chip.f-freetime.active{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.filter-chip.f-aaram.active{background:#FBEAF0;color:#72243E;border-color:#ED93B1}
+.toolbar-right{margin-left:auto;display:flex;gap:6px}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary)}
+.btn-sm:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#534AB7;color:#fff;border-color:#534AB7}
+.btn-primary:hover{background:#3C3489;border-color:#3C3489}
+.agenda-area{flex:1;overflow:auto;padding:16px}
+.conflict-banner{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--border-radius-md);margin-bottom:12px;font-size:13px;color:#791F1F}
+.conflict-banner strong{font-weight:500}
+.timeline{display:grid;grid-template-columns:64px 1fr;gap:0}
+.time-col{display:flex;flex-direction:column}
+.time-label{height:80px;display:flex;align-items:flex-start;padding-top:6px;font-size:11px;color:var(--color-text-tertiary);justify-content:flex-end;padding-right:10px}
+.tracks{display:flex;flex-direction:column;gap:0;border-left:0.5px solid var(--color-border-tertiary)}
+.hour-row{min-height:80px;border-bottom:0.5px solid var(--color-border-tertiary);display:grid;gap:6px;padding:6px 8px;position:relative}
+.hour-row.cols-1{grid-template-columns:1fr}
+.hour-row.cols-2{grid-template-columns:1fr 1fr}
+.hour-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+.session-card{border-radius:var(--border-radius-md);padding:8px 10px;cursor:pointer;border:0.5px solid transparent;position:relative;transition:opacity .15s}
+.session-card:hover{opacity:.85}
+.session-card.adhyatmik{background:#E1F5EE;border-color:#5DCAA5}
+.session-card.vyavharik{background:#E6F1FB;border-color:#85B7EB}
+.session-card.freetime{background:#FAEEDA;border-color:#EF9F27}
+.session-card.aaram{background:#FBEAF0;border-color:#ED93B1}
+.session-card.meals{background:#EAF3DE;border-color:#97C459}
+.session-card.announcements{background:#F1EFE8;border-color:#B4B2A9}
+.session-card.conflict{border:1.5px solid #E24B4A}
+.s-time{font-size:11px;font-weight:500;margin-bottom:2px}
+.s-title{font-size:13px;font-weight:500;line-height:1.3;margin-bottom:4px}
+.s-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.badge{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500}
+.badge-audience{background:rgba(0,0,0,.07);color:var(--color-text-secondary)}
+.badge-speaker{background:rgba(0,0,0,.05);color:var(--color-text-tertiary)}
+.badge-conflict{background:#FCEBEB;color:#A32D2D}
+.badge-room{background:rgba(0,0,0,.05);color:var(--color-text-tertiary)}
+.cat-adhyatmik{color:#085041}.cat-vyavharik{color:#0C447C}.cat-freetime{color:#633806}.cat-aaram{color:#72243E}.cat-meals{color:#27500A}.cat-announcements{color:#444441}
+.common-span{grid-column:1/-1}
+.slide-over-bg{position:absolute;inset:0;background:rgba(0,0,0,.25);z-index:50;display:flex;justify-content:flex-end}
+.slide-over{width:360px;background:var(--color-background-primary);height:100%;overflow-y:auto;border-left:0.5px solid var(--color-border-tertiary);padding:20px}
+.so-close{float:right;cursor:pointer;font-size:18px;color:var(--color-text-tertiary);background:none;border:none;line-height:1}
+.so-cat-bar{height:4px;border-radius:2px;margin-bottom:14px}
+.so-title{font-size:18px;font-weight:500;margin-bottom:4px;line-height:1.3}
+.so-time{font-size:13px;color:var(--color-text-secondary);margin-bottom:14px}
+.so-section{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.so-val{font-size:13px;color:var(--color-text-primary);line-height:1.6}
+.so-chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:12px;margin:2px}
+.so-speaker{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.so-avatar{width:28px;height:28px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#534AB7;flex-shrink:0}
+.tz-display{display:flex;gap:0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;font-size:11px}
+.tz-block{padding:4px 8px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary)}
+.tz-block:last-child{border-right:none}
+.tz-city{color:var(--color-text-tertiary);display:block}
+.tz-time{font-weight:500;color:var(--color-text-primary)}
+.hidden{display:none}
+.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.metric-val{font-size:24px;font-weight:500}
+.donut-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.donut-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px}
+.cat-legend{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.cat-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.cat-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.cat-pct{margin-left:auto;font-weight:500;font-size:13px}
+.bar-bg{background:var(--color-background-secondary);border-radius:4px;height:6px;flex:1;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+</style>
+
+<div class="app" id="app">
+<div class="topbar">
+  <div class="logo"><span>Sabha</span>Agenda</div>
+  <div class="event-pill">
+    <span class="dot"></span>
+    Chicago Satsang 2025
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+  </div>
+  <div class="topbar-right">
+    <div class="tz-display">
+      <div class="tz-block"><span class="tz-city">Chicago</span><span class="tz-time" id="tz-chicago">9:00 AM CDT</span></div>
+      <div class="tz-block"><span class="tz-city">NJ</span><span class="tz-time" id="tz-nj">10:00 AM EDT</span></div>
+      <div class="tz-block"><span class="tz-city">London</span><span class="tz-time" id="tz-london">3:00 PM BST</span></div>
+    </div>
+    <div class="avatar">AS</div>
+  </div>
+</div>
+
+<div class="body">
+<div class="sidebar">
+  <div style="padding:8px 12px">
+    <div style="font-size:12px;color:var(--color-text-tertiary)">Jul 4–6, 2025</div>
+    <div style="font-size:13px;font-weight:500;margin-top:2px">Chicago, IL</div>
+  </div>
+  <div class="sidebar-section">Program</div>
+  <div class="nav-item" onclick="switchView('dashboard')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/></svg>
+    Dashboard
+  </div>
+  <div class="nav-item active" id="nav-agenda" onclick="switchView('agenda')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="1" y="5.5" width="8" height="1.5" rx=".75" fill="currentColor"/><rect x="1" y="9" width="10" height="1.5" rx=".75" fill="currentColor"/></svg>
+    Agenda
+  </div>
+  <div class="nav-item">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Speakers
+  </div>
+  <div class="nav-item">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v4M10 1v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Rooms
+  </div>
+  <div class="nav-item">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Attendees
+  </div>
+  <div class="sidebar-section">Admin</div>
+  <div class="nav-item">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Settings
+  </div>
+  <div class="nav-item">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h10v2H2zM2 6h10v2H2zM2 10h7v2H2z" fill="currentColor" opacity=".6"/></svg>
+    Audit log
+  </div>
+  <div style="margin-top:auto;padding:12px 14px;border-top:0.5px solid var(--color-border-tertiary);margin-top:16px">
+    <div style="font-size:12px;color:var(--color-text-secondary)">Logged in as</div>
+    <div style="font-size:13px;font-weight:500">Amit Shah</div>
+    <div style="font-size:11px;color:#534AB7;margin-top:2px">event_admin</div>
+  </div>
+</div>
+
+<div class="main">
+
+<div id="view-agenda">
+<div class="toolbar">
+  <div class="day-tabs">
+    <div class="day-tab active" onclick="setDay(0,this)">Fri Jul 4</div>
+    <div class="day-tab" onclick="setDay(1,this)">Sat Jul 5</div>
+    <div class="day-tab" onclick="setDay(2,this)">Sun Jul 6</div>
+  </div>
+  <div class="view-btns">
+    <div class="view-btn active" onclick="setView('detailed',this)">Detailed</div>
+    <div class="view-btn" onclick="setView('simple',this)">Simple</div>
+    <div class="view-btn" onclick="setView('print',this)">Print</div>
+    <div class="view-btn" onclick="setView('public',this)">Public</div>
+  </div>
+  <div class="filter-row" id="filter-row">
+    <div class="filter-chip f-all active" onclick="setFilter('all',this)">All</div>
+    <div class="filter-chip f-adhyatmik" onclick="setFilter('adhyatmik',this)">Adhyatmik</div>
+    <div class="filter-chip f-vyavharik" onclick="setFilter('vyavharik',this)">Vyavharik</div>
+    <div class="filter-chip f-freetime" onclick="setFilter('freetime',this)">Free time</div>
+    <div class="filter-chip f-aaram" onclick="setFilter('aaram',this)">Aaram</div>
+  </div>
+  <div class="toolbar-right">
+    <button class="btn-sm" onclick="sendPrompt('Generate the Supabase SQL schema for this agenda app')">Export ↓</button>
+    <button class="btn-sm btn-primary" onclick="openNewSession()">+ Session</button>
+  </div>
+</div>
+
+<div class="agenda-area" id="agenda-area">
+  <div class="conflict-banner" id="conflict-banner">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 12H1L7 1z" stroke="#E24B4A" stroke-width="1.2"/><path d="M7 5.5v3M7 9.5v1" stroke="#E24B4A" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <span><strong>1 conflict detected</strong> — Pujya Swamiji double-booked at 2:00 PM. <span style="text-decoration:underline;cursor:pointer">Review</span></span>
+  </div>
+  <div class="timeline">
+    <div class="time-col" id="time-col"></div>
+    <div class="tracks" id="tracks"></div>
+  </div>
+</div>
+</div>
+
+<div id="view-dashboard" class="hidden" style="flex:1;overflow:auto;padding:16px">
+  <div style="font-size:16px;font-weight:500;margin-bottom:14px">Chicago Satsang 2025 — overview</div>
+  <div class="dashboard-grid">
+    <div class="metric-card"><div class="metric-label">Total sessions</div><div class="metric-val">24</div></div>
+    <div class="metric-card"><div class="metric-label">Total hours</div><div class="metric-val">38.5</div></div>
+    <div class="metric-card"><div class="metric-label">Registered</div><div class="metric-val">312</div></div>
+    <div class="metric-card"><div class="metric-label">Conflicts</div><div class="metric-val" style="color:#E24B4A">1</div></div>
+  </div>
+  <div class="donut-wrap">
+    <div class="donut-card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:2px">Time by category</div>
+      <div style="font-size:12px;color:var(--color-text-secondary)">Hours across all 3 days</div>
+      <canvas id="donut-chart" width="120" height="120" style="display:block;margin:12px auto"></canvas>
+      <div class="cat-legend">
+        <div class="cat-row"><div class="cat-swatch" style="background:#1D9E75"></div>Adhyatmik<div class="bar-bg"><div class="bar-fill" style="width:48%;background:#1D9E75"></div></div><span class="cat-pct">48%</span></div>
+        <div class="cat-row"><div class="cat-swatch" style="background:#378ADD"></div>Vyavharik<div class="bar-bg"><div class="bar-fill" style="width:22%;background:#378ADD"></div></div><span class="cat-pct">22%</span></div>
+        <div class="cat-row"><div class="cat-swatch" style="background:#EF9F27"></div>Free time<div class="bar-bg"><div class="bar-fill" style="width:15%;background:#EF9F27"></div></div><span class="cat-pct">15%</span></div>
+        <div class="cat-row"><div class="cat-swatch" style="background:#ED93B1"></div>Aaram<div class="bar-bg"><div class="bar-fill" style="width:10%;background:#ED93B1"></div></div><span class="cat-pct">10%</span></div>
+        <div class="cat-row"><div class="cat-swatch" style="background:#97C459"></div>Meals<div class="bar-bg"><div class="bar-fill" style="width:5%;background:#97C459"></div></div><span class="cat-pct">5%</span></div>
+      </div>
+    </div>
+    <div class="donut-card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:2px">Sessions by audience</div>
+      <div style="font-size:12px;color:var(--color-text-secondary)">Breakout tracks</div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+        <div class="cat-row">Vadil Bhaio<div class="bar-bg"><div class="bar-fill" style="width:70%;background:#534AB7"></div></div><span class="cat-pct">7</span></div>
+        <div class="cat-row">Mahila<div class="bar-bg"><div class="bar-fill" style="width:70%;background:#D4537E"></div></div><span class="cat-pct">7</span></div>
+        <div class="cat-row">Yuva<div class="bar-bg"><div class="bar-fill" style="width:60%;background:#1D9E75"></div></div><span class="cat-pct">6</span></div>
+        <div class="cat-row">Kishor<div class="bar-bg"><div class="bar-fill" style="width:40%;background:#EF9F27"></div></div><span class="cat-pct">4</span></div>
+        <div class="cat-row">Balak<div class="bar-bg"><div class="bar-fill" style="width:30%;background:#D85A30"></div></div><span class="cat-pct">3</span></div>
+        <div class="cat-row">All<div class="bar-bg"><div class="bar-fill" style="width:90%;background:#888780"></div></div><span class="cat-pct">9</span></div>
+      </div>
+      <div style="margin-top:20px;font-size:13px;font-weight:500;margin-bottom:8px">Recent changes</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px"><span style="color:var(--color-text-tertiary)">2m ago</span> Suhrad Shah edited <em>Satsang Vidhis</em></div>
+        <div style="display:flex;gap:8px"><span style="color:var(--color-text-tertiary)">1h ago</span> Amit Shah added <em>Balak Kirtan</em></div>
+        <div style="display:flex;gap:8px"><span style="color:var(--color-text-tertiary)">3h ago</span> Priya Patel confirmed speaker</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div id="slide-over-container"></div>
+
+<script>
+const DAYS = [
+  [
+    {time:'7:00 AM',end:'7:45 AM',title:'Mangala Aarti & Dhoon',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:'Opening prayers and devotional singing to begin the day.',virtual:'meet.google.com/abc-defg'},
+    {time:'8:00 AM',end:'8:45 AM',title:'Breakfast & check-in',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+    {time:'9:00 AM',end:'10:00 AM',title:'Satsang Sabha — Katha',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:'Morning discourse on the Vachanamrut.'},
+    {time:'10:15 AM',end:'11:15 AM',title:'Bhaio Satsang',cat:'adhyatmik',audience:'Vadil Bhaio',speaker:'Haribhai Patel',room:'Room A',common:false,desc:'Men\'s group discussion session.'},
+    {time:'10:15 AM',end:'11:15 AM',title:'Mahila Satsang',cat:'adhyatmik',audience:'Mahila',speaker:'Priya Shah',room:'Room B',common:false,desc:'Women\'s group discussion session.'},
+    {time:'10:15 AM',end:'11:00 AM',title:'Kishor Bal Vihar',cat:'vyavharik',audience:'Kishor',speaker:'Nirav Mehta',room:'Room C',common:false,desc:'',conflict:true},
+    {time:'11:30 AM',end:'12:30 PM',title:'Vyavharik Workshop',cat:'vyavharik',audience:'Yuva',speaker:'Suhrad Shah',room:'Room A',common:false,desc:'Youth leadership and life skills.'},
+    {time:'12:30 PM',end:'1:30 PM',title:'Lunch',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+    {time:'2:00 PM',end:'3:00 PM',title:'Afternoon Katha',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:'Afternoon discourse.',conflict:true},
+    {time:'3:15 PM',end:'4:00 PM',title:'Free time / Aaram',cat:'aaram',audience:'All',speaker:'',room:'',common:true,desc:'Rest and personal time.'},
+    {time:'4:00 PM',end:'5:00 PM',title:'Region Meetup — Chicago',cat:'vyavharik',audience:'Chicago',speaker:'Dilip Patel',room:'Room A',common:false,desc:''},
+    {time:'4:00 PM',end:'5:00 PM',title:'Region Meetup — NJ/Canada',cat:'vyavharik',audience:'NJ / Canada',speaker:'Ramesh Shah',room:'Room B',common:false,desc:''},
+    {time:'7:00 PM',end:'8:30 PM',title:'Evening Satsang & Kirtan',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:'Evening assembly with kirtan.'},
+  ],
+  [
+    {time:'6:45 AM',end:'7:30 AM',title:'Prabhat Pheri & Dhoon',cat:'adhyatmik',audience:'All',speaker:'',room:'Grounds',common:true,desc:'Morning walk with devotional singing.'},
+    {time:'8:00 AM',end:'8:45 AM',title:'Breakfast',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+    {time:'9:00 AM',end:'10:00 AM',title:'Bal Satsang',cat:'adhyatmik',audience:'Balak',speaker:'Kiran Desai',room:'Room C',common:false,desc:'Children\'s satsang with stories.'},
+    {time:'9:00 AM',end:'10:00 AM',title:'Kishor Sabha',cat:'adhyatmik',audience:'Kishor',speaker:'Nirav Mehta',room:'Room D',common:false,desc:''},
+    {time:'9:00 AM',end:'10:00 AM',title:'Yuva Satsang',cat:'adhyatmik',audience:'Yuva',speaker:'Suhrad Shah',room:'Room A',common:false,desc:''},
+    {time:'10:15 AM',end:'11:30 AM',title:'Vachanamrut Vanchana',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:''},
+    {time:'12:00 PM',end:'1:00 PM',title:'Lunch',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+    {time:'2:00 PM',end:'4:00 PM',title:'Free time',cat:'freetime',audience:'All',speaker:'',room:'',common:true,desc:'Explore, socialize, rest.'},
+    {time:'4:30 PM',end:'5:30 PM',title:'Shibir — Yuvati',cat:'adhyatmik',audience:'Yuvati',speaker:'Priya Shah',room:'Room B',common:false,desc:''},
+    {time:'4:30 PM',end:'5:30 PM',title:'Shibir — Yuva',cat:'adhyatmik',audience:'Yuva',speaker:'Suhrad Shah',room:'Room A',common:false,desc:''},
+    {time:'7:30 PM',end:'9:00 PM',title:'Cultural program & awards',cat:'vyavharik',audience:'All',speaker:'',room:'Main Hall',common:true,desc:'Performances by Yuva and Kishor.'},
+  ],
+  [
+    {time:'7:00 AM',end:'7:45 AM',title:'Mangala Aarti',cat:'adhyatmik',audience:'All',speaker:'',room:'Main Hall',common:true,desc:''},
+    {time:'8:00 AM',end:'8:45 AM',title:'Breakfast',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+    {time:'9:00 AM',end:'10:30 AM',title:'Closing Satsang Sabha',cat:'adhyatmik',audience:'All',speaker:'Pujya Swamiji',room:'Main Hall',common:true,desc:'Closing ceremony and blessings.'},
+    {time:'10:45 AM',end:'11:30 AM',title:'Prasad & farewell',cat:'meals',audience:'All',speaker:'',room:'Dining Hall',common:true,desc:''},
+  ]
+];
+
+const TZ_OFFSETS = {chicago:0,nj:1,london:6};
+const BASE_TIMES = ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM'];
+
+let currentDay=0, currentFilter='all', currentView='detailed';
+
+function addHour(timeStr,h){
+  let [t,ap]=timeStr.split(' ');
+  let [hr,mn]=t.split(':').map(Number);
+  if(ap==='PM'&&hr!==12)hr+=12;
+  if(ap==='AM'&&hr===12)hr=0;
+  hr+=h;
+  let nap=hr>=12?'PM':'AM';
+  let nhr=hr%12||12;
+  return `${nhr}:${mn.toString().padStart(2,'0')} ${nap}`;
+}
+
+function renderTZ(){
+  const base=9;
+  document.getElementById('tz-chicago').textContent=`${base}:00 AM CDT`;
+  document.getElementById('tz-nj').textContent=`${base+1}:00 AM EDT`;
+  document.getElementById('tz-london').textContent=`${base+6}:00 PM BST`;
+}
+
+function renderAgenda(){
+  const sessions=DAYS[currentDay];
+  const timeCol=document.getElementById('time-col');
+  const tracks=document.getElementById('tracks');
+  timeCol.innerHTML='';
+  tracks.innerHTML='';
+
+  const timeslots={};
+  sessions.forEach(s=>{
+    if(!timeslots[s.time])timeslots[s.time]=[];
+    timeslots[s.time].push(s);
+  });
+
+  const hours=Object.keys(timeslots).sort((a,b)=>{
+    const toMin=t=>{let[tm,ap]=t.split(' ');let[h,m]=tm.split(':').map(Number);if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return h*60+m};
+    return toMin(a)-toMin(b);
+  });
+
+  hours.forEach(hr=>{
+    const lbl=document.createElement('div');
+    lbl.className='time-label';
+    lbl.textContent=hr;
+    timeCol.appendChild(lbl);
+
+    const slot=timeslots[hr];
+    const filtered=currentFilter==='all'?slot:slot.filter(s=>s.cat===currentFilter||s.common);
+    if(!filtered.length){
+      const row=document.createElement('div');
+      row.className='hour-row cols-1';
+      row.style.minHeight='40px';
+      tracks.appendChild(row);
+      return;
+    }
+    const cols=filtered.length===1?1:filtered.some(s=>s.common)?1:filtered.length<=2?2:3;
+    const row=document.createElement('div');
+    row.className=`hour-row cols-${cols}`;
+    filtered.forEach(s=>{
+      const card=document.createElement('div');
+      card.className=`session-card ${s.cat}${s.conflict?' conflict':''}${s.common?' common-span':''}`;
+      card.innerHTML=`
+        <div class="s-time cat-${s.cat}">${s.time} – ${s.end}</div>
+        <div class="s-title">${s.title}</div>
+        <div class="s-meta">
+          ${s.audience&&s.audience!=='All'?`<span class="badge badge-audience">${s.audience}</span>`:''}
+          ${s.speaker?`<span class="badge badge-speaker">${s.speaker}</span>`:''}
+          ${s.room?`<span class="badge badge-room">${s.room}</span>`:''}
+          ${s.conflict?`<span class="badge badge-conflict">conflict</span>`:''}
+        </div>`;
+      card.onclick=()=>openSlideOver(s);
+      row.appendChild(card);
+    });
+    tracks.appendChild(row);
+  });
+}
+
+function renderSimple(){
+  const sessions=DAYS[currentDay];
+  const area=document.getElementById('agenda-area');
+  area.innerHTML='<div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Simplified view — all sessions listed sequentially</div>';
+  const tbl=document.createElement('div');
+  tbl.style.cssText='background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden';
+  sessions.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText=`display:grid;grid-template-columns:80px 1fr 90px 80px;gap:10px;padding:10px 14px;align-items:center;font-size:13px;${i>0?'border-top:0.5px solid var(--color-border-tertiary)':''}`;
+    row.innerHTML=`
+      <div style="color:var(--color-text-secondary)">${s.time}</div>
+      <div>
+        <div style="font-weight:500">${s.title}</div>
+        ${s.speaker?`<div style="font-size:12px;color:var(--color-text-tertiary)">${s.speaker}</div>`:''}
+      </div>
+      <div><span class="badge" style="background:${catColor(s.cat,true)};color:${catColor(s.cat,false)}">${s.cat}</span></div>
+      <div style="font-size:12px;color:var(--color-text-tertiary)">${s.audience}</div>`;
+    row.onclick=()=>openSlideOver(s);
+    row.style.cursor='pointer';
+    tbl.appendChild(row);
+  });
+  area.appendChild(tbl);
+}
+
+function renderPrint(){
+  const area=document.getElementById('agenda-area');
+  area.innerHTML='<div style="max-width:600px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px">'
+    +'<div style="text-align:center;margin-bottom:20px"><div style="font-size:20px;font-weight:500">Chicago Satsang 2025</div><div style="color:var(--color-text-secondary);font-size:13px">July 4–6, 2025 · Chicago, IL</div></div>'
+    +'<div style="font-size:14px;font-weight:500;margin-bottom:12px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary)">Friday, July 4</div>'
+    +DAYS[currentDay].map(s=>`<div style="display:flex;gap:16px;margin-bottom:12px"><div style="min-width:80px;font-size:12px;color:var(--color-text-secondary)">${s.time}</div><div><div style="font-size:13px;font-weight:500">${s.title}</div>${s.speaker?`<div style="font-size:12px;color:var(--color-text-tertiary)">${s.speaker} · ${s.room||'–'}</div>`:''}</div></div>`).join('')
+    +'<div style="margin-top:20px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--color-text-tertiary)">Generated '+new Date().toLocaleDateString()+'</span><span style="font-size:11px;color:var(--color-text-tertiary)">Page 1 of 3</span></div>'
+    +'</div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn-sm" onclick="window.print()">Print</button><button class="btn-sm btn-primary">Download PDF</button></div>';
+}
+
+function renderPublic(){
+  const area=document.getElementById('agenda-area');
+  const confirmed=DAYS[currentDay].filter(s=>!s.conflict);
+  area.innerHTML='<div style="background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);padding:8px 12px;margin-bottom:12px;font-size:13px;color:#3C3489">Public view — showing confirmed sessions only. Virtual links and draft sessions are hidden.</div>';
+  const wrap=document.createElement('div');
+  confirmed.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;margin-bottom:8px`;
+    card.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--color-text-secondary)">${s.time} – ${s.end}</span>
+      <span class="badge" style="background:${catColor(s.cat,true)};color:${catColor(s.cat,false)}">${s.cat}</span>
+    </div>
+    <div style="font-weight:500;font-size:14px">${s.title}</div>
+    ${s.speaker?`<div style="font-size:12px;color:var(--color-text-secondary);margin-top:3px">${s.speaker}${s.room?' · '+s.room:''}</div>`:''}
+    ${s.audience&&s.audience!=='All'?`<div style="margin-top:6px"><span class="badge badge-audience">${s.audience}</span></div>`:''}`;
+    wrap.appendChild(card);
+  });
+  area.appendChild(wrap);
+}
+
+function catColor(cat,bg){
+  const m={adhyatmik:['#E1F5EE','#085041'],vyavharik:['#E6F1FB','#0C447C'],freetime:['#FAEEDA','#633806'],aaram:['#FBEAF0','#72243E'],meals:['#EAF3DE','#27500A'],announcements:['#F1EFE8','#444441']};
+  return (m[cat]||['#F1EFE8','#444441'])[bg?0:1];
+}
+
+function setDay(i,el){
+  currentDay=i;
+  document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  redraw();
+}
+
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  redraw();
+}
+
+function setView(v,el){
+  currentView=v;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const banner=document.getElementById('conflict-banner');
+  if(banner)banner.style.display=(v==='detailed')?'flex':'none';
+  redraw();
+}
+
+function redraw(){
+  if(currentView==='simple'){renderSimple();return;}
+  if(currentView==='print'){renderPrint();return;}
+  if(currentView==='public'){renderPublic();return;}
+  const area=document.getElementById('agenda-area');
+  area.innerHTML='';
+  const banner=document.createElement('div');
+  banner.id='conflict-banner';
+  banner.className='conflict-banner';
+  banner.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 12H1L7 1z" stroke="#E24B4A" stroke-width="1.2"/><path d="M7 5.5v3M7 9.5v1" stroke="#E24B4A" stroke-width="1.2" stroke-linecap="round"/></svg><span><strong>1 conflict detected</strong> — Pujya Swamiji double-booked at 2:00 PM. <span style="text-decoration:underline;cursor:pointer">Review</span></span>';
+  if(currentDay!==0)banner.style.display='none';
+  area.appendChild(banner);
+  const tl=document.createElement('div');
+  tl.className='timeline';
+  const tc=document.createElement('div');tc.className='time-col';tc.id='time-col';
+  const tr=document.createElement('div');tr.className='tracks';tr.id='tracks';
+  tl.appendChild(tc);tl.appendChild(tr);
+  area.appendChild(tl);
+  renderAgenda();
+}
+
+function openSlideOver(s){
+  const c=document.getElementById('slide-over-container');
+  const barColors={adhyatmik:'#1D9E75',vyavharik:'#378ADD',freetime:'#EF9F27',aaram:'#D4537E',meals:'#97C459',announcements:'#888780'};
+  c.style.cssText='position:absolute;inset:0;z-index:50;pointer-events:none';
+  c.innerHTML=`<div class="slide-over-bg" style="pointer-events:all" onclick="closeSlideOver(event)">
+    <div class="slide-over" onclick="event.stopPropagation()">
+      <button class="so-close" onclick="closeSlideOver()">×</button>
+      <div class="so-cat-bar" style="background:${barColors[s.cat]||'#888'}"></div>
+      <div class="so-title">${s.title}</div>
+      <div class="so-time">${s.time} – ${s.end} · ${s.common?'All attendees':'Breakout'}</div>
+      ${s.conflict?'<div style="background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:#791F1F;margin-bottom:8px">Scheduling conflict detected with another session</div>':''}
+      <div class="so-section">Category</div>
+      <span class="so-chip" style="background:${catColor(s.cat,true)};color:${catColor(s.cat,false)}">${s.cat}</span>
+      <div class="so-section">Target audience</div>
+      <span class="so-chip badge-audience" style="background:var(--color-background-secondary)">${s.audience}</span>
+      ${s.speaker?`<div class="so-section">Speaker / Vakta</div><div class="so-speaker"><div class="so-avatar">${s.speaker.split(' ').map(w=>w[0]).join('').slice(0,2)}</div><div><div style="font-size:13px;font-weight:500">${s.speaker}</div><div style="font-size:12px;color:#1D9E75">Confirmed</div></div></div>`:''}
+      ${s.room?`<div class="so-section">Room</div><div class="so-val">${s.room}</div>`:''}
+      ${s.virtual?`<div class="so-section">Virtual link</div><div class="so-val" style="color:var(--color-text-info);font-size:12px">${s.virtual}</div>`:''}
+      ${s.desc?`<div class="so-section">Description</div><div class="so-val">${s.desc}</div>`:''}
+      <div style="margin-top:20px;display:flex;gap:8px">
+        <button class="btn-sm btn-primary" style="flex:1">Edit session</button>
+        <button class="btn-sm">History</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn-sm" style="width:100%;font-size:12px">+ Add to calendar (.ics)</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function closeSlideOver(e){
+  if(!e||e.target.classList.contains('slide-over-bg')){
+    document.getElementById('slide-over-container').innerHTML='';
+    document.getElementById('slide-over-container').style='';
+  }
+}
+
+function openNewSession(){
+  const c=document.getElementById('slide-over-container');
+  c.style.cssText='position:absolute;inset:0;z-index:50;pointer-events:none';
+  c.innerHTML=`<div class="slide-over-bg" style="pointer-events:all" onclick="closeSlideOver(event)">
+    <div class="slide-over" onclick="event.stopPropagation()">
+      <button class="so-close" onclick="closeSlideOver()">×</button>
+      <div class="so-title" style="font-size:16px">New session</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:16px">Friday, July 4</div>
+      <div class="so-section">Title</div>
+      <input type="text" placeholder="Session title" style="width:100%;margin-bottom:10px">
+      <div class="so-section">Category</div>
+      <select style="width:100%;margin-bottom:10px"><option>Adhyatmik</option><option>Vyavharik</option><option>Free-Time</option><option>Aaram</option><option>Meals</option></select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="so-section">Start time</div><input type="time" value="09:00" style="width:100%"></div>
+        <div><div class="so-section">End time</div><input type="time" value="10:00" style="width:100%"></div>
+      </div>
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:var(--color-text-secondary);margin-bottom:10px">Duration: 1 hr 0 min · Chicago: 9:00 AM | NJ: 10:00 AM | London: 3:00 PM</div>
+      <div class="so-section">Audience type</div>
+      <select style="width:100%;margin-bottom:4px"><option>All (common session)</option><option>Age group</option><option>Gender group</option><option>Region</option></select>
+      <div class="so-section">Speaker / Vakta</div>
+      <select style="width:100%;margin-bottom:10px"><option value="">— select —</option><option>Pujya Swamiji</option><option>Haribhai Patel</option><option>Priya Shah</option><option>Suhrad Shah</option><option>Nirav Mehta</option></select>
+      <div class="so-section">Room</div>
+      <select style="width:100%;margin-bottom:10px"><option>Main Hall (cap. 300)</option><option>Room A (cap. 80)</option><option>Room B (cap. 80)</option><option>Room C (cap. 50)</option></select>
+      <div class="so-section">Virtual link (optional)</div>
+      <input type="text" placeholder="https://meet.google.com/..." style="width:100%;margin-bottom:16px">
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-primary" style="flex:1">Create session</button>
+        <button class="btn-sm" onclick="closeSlideOver()">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function switchView(v){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(v==='dashboard'){
+    document.getElementById('view-agenda').classList.add('hidden');
+    document.getElementById('view-dashboard').classList.remove('hidden');
+    event.currentTarget.classList.add('active');
+    drawDonut();
+  } else {
+    document.getElementById('view-agenda').classList.remove('hidden');
+    document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById('nav-agenda').classList.add('active');
+    redraw();
+  }
+}
+
+function drawDonut(){
+  const canvas=document.getElementById('donut-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const data=[{v:48,c:'#1D9E75'},{v:22,c:'#378ADD'},{v:15,c:'#EF9F27'},{v:10,c:'#ED93B1'},{v:5,c:'#97C459'}];
+  let start=-Math.PI/2;
+  const cx=60,cy=60,r=50,inner=30;
+  ctx.clearRect(0,0,120,120);
+  data.forEach(d=>{
+    const angle=(d.v/100)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+angle);
+    ctx.closePath();
+    ctx.fillStyle=d.c;
+    ctx.fill();
+    start+=angle;
+  });
+  ctx.beginPath();
+  ctx.arc(cx,cy,inner,0,Math.PI*2);
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--color-background-primary')||'#fff';
+  ctx.fill();
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--color-text-primary')||'#000';
+  ctx.font='500 13px sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('38.5h',cx,cy+5);
+}
+
+renderTZ();
+redraw();
+</script>
