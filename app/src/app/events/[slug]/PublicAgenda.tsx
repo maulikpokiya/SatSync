@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { Globe } from 'lucide-react'
 import { CATEGORY_MAP } from '@/lib/constants'
 import type { Session } from '@/types'
 
@@ -16,7 +18,28 @@ function fmt(utcIso: string | null, tz: string) {
   })
 }
 
+function getTzAbbr(tz: string) {
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+      .formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? tz
+  } catch { return tz }
+}
+
 export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
+  const [useLocal, setUseLocal] = useState(false)
+  const [localTz, setLocalTz] = useState<string | null>(null)
+
+  useEffect(() => {
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    // Only offer the toggle if browser timezone differs from event timezone
+    if (browserTz && browserTz !== timezone) {
+      setLocalTz(browserTz)
+    }
+  }, [timezone])
+
+  const activeTz = useLocal && localTz ? localTz : timezone
+  const activeTzAbbr = useLocal && localTz ? getTzAbbr(localTz) : tzAbbr
+
   const columns = allDays.map((d) => ({
     ...d,
     sessions: [...d.sessions].sort((a, b) => (a.start_time ?? '').localeCompare(b.start_time ?? '')),
@@ -24,6 +47,27 @@ export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Timezone switcher — only shown when browser tz differs from event tz */}
+      {localTz && (
+        <div className="flex items-center justify-end gap-2 no-print">
+          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center rounded-md border border-border overflow-hidden text-xs">
+            <button
+              onClick={() => setUseLocal(false)}
+              className={`px-3 py-1.5 transition-colors ${!useLocal ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {tzAbbr}
+            </button>
+            <button
+              onClick={() => setUseLocal(true)}
+              className={`px-3 py-1.5 border-l border-border transition-colors ${useLocal ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {getTzAbbr(localTz)}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Grid */}
       <div className="overflow-x-auto -mx-4 px-4">
         <div className="flex gap-3" style={{ minWidth: `${columns.length * 220}px` }}>
@@ -49,8 +93,8 @@ export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
                         style={cat ? { borderLeftWidth: 3, borderLeftColor: cat.color } : undefined}
                       >
                         <p className="text-xs text-muted-foreground font-medium mb-1">
-                          {fmt(s.start_time, timezone)}
-                          {s.end_time && <span className="text-muted-foreground/50"> – {fmt(s.end_time, timezone)}</span>}
+                          {fmt(s.start_time, activeTz)}
+                          {s.end_time && <span className="text-muted-foreground/50"> – {fmt(s.end_time, activeTz)}</span>}
                         </p>
                         <p className="text-xs font-medium leading-snug">{s.title}</p>
                         <div className="flex flex-wrap gap-1 mt-1.5">
@@ -85,7 +129,7 @@ export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground pt-2">All times shown in {tzAbbr}.</p>
+      <p className="text-xs text-muted-foreground pt-2">All times shown in {activeTzAbbr}.</p>
     </div>
   )
 }
