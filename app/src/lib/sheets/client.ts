@@ -24,4 +24,5 @@ export const SHEET_ID = process.env.GOOGLE_SHEET_ID!
 export const TABS = {
   users: 'users',
   events: 'events',
+  sessions: 'sessions',
 } as const

@@ -43,11 +43,12 @@
 1. Create a new Google Spreadsheet at [sheets.google.com](https://sheets.google.com)
 2. Rename the default tab to `users`
 3. Add a second tab named `events`
-4. Copy the **Spreadsheet ID** from the URL:
+4. Add a third tab named `sessions`
+5. Copy the **Spreadsheet ID** from the URL:
    ```
    https://docs.google.com/spreadsheets/d/SPREADSHEET_ID_IS_HERE/edit
    ```
-5. Share the sheet with your **service account email** (from the JSON file) — give it **Editor** access
+6. Share the sheet with your **service account email** (from the JSON file) — give it **Editor** access
 
 ---
 
@@ -129,6 +130,20 @@ On first sign-in the app creates your row in the `users` sheet tab. To get admin
 | id | title | slug | status | start_date | end_date | primary_timezone | created_by | created_at | updated_at |
 
 **Valid statuses:** `draft`, `published`, `archived`
+
+### `sessions` tab
+
+| A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| id | event_id | title | description | objectives | prerequisites | start_time | end_time | category | audience_type | audience_values | room | virtual_link | status | is_common | color_override | sort_order | created_by | created_at | updated_at |
+
+- `start_time` / `end_time`: ISO 8601 UTC strings (e.g. `2025-07-04T14:00:00.000Z`)
+- `audience_values`: comma-separated string (e.g. `Yuva,Kishor`)
+- `is_common`: `TRUE` or `FALSE`
+- **Valid statuses:** `draft`, `confirmed`, `cancelled`, `postponed`
+- **Valid categories:** `adhyatmik`, `vyavharik`, `free_time`, `aaram`, `meals`, `announcements`, `travel`
+
+> The app creates header rows and appends data automatically — you do not need to manually add headers.
 
 ---
 
