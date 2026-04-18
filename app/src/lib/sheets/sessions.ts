@@ -2,8 +2,8 @@
  * sessions sheet columns (0-indexed):
  * A=id  B=event_id  C=title  D=description  E=objectives  F=prerequisites
  * G=start_time  H=end_time  I=category  J=audience_type  K=audience_values
- * L=room  M=virtual_link  N=status  O=is_common  P=color_override
- * Q=sort_order  R=created_by  S=created_at  T=updated_at
+ * L=room_id  M=virtual_link  N=status  O=is_common  P=color_override
+ * Q=sort_order  R=created_by  S=created_at  T=updated_at  U=speaker_ids
  */
 
 import { randomUUID } from 'crypto'
@@ -13,12 +13,12 @@ import { MOCK_SESSIONS } from './mock-data'
 
 const DEMO_MODE = !process.env.GOOGLE_SHEET_ID
 const TAB = 'sessions'
-const RANGE = `${TAB}!A:T`
+const RANGE = `${TAB}!A:U`
 const HEADER = [
   'id','event_id','title','description','objectives','prerequisites',
   'start_time','end_time','category','audience_type','audience_values',
-  'room','virtual_link','status','is_common','color_override',
-  'sort_order','created_by','created_at','updated_at',
+  'room_id','virtual_link','status','is_common','color_override',
+  'sort_order','created_by','created_at','updated_at','speaker_ids',
 ]
 
 function rowToSession(row: string[]): Session {
@@ -34,7 +34,7 @@ function rowToSession(row: string[]): Session {
     category: (row[8] as CategoryId) || null,
     audience_type: (row[9] as AudienceType) || 'all',
     audience_values: row[10] ? row[10].split(',').map((s) => s.trim()).filter(Boolean) : [],
-    room: row[11] || null,
+    room_id: row[11] || null,
     virtual_link: row[12] || null,
     status: (row[13] as SessionStatus) || 'draft',
     is_common: row[14] === 'TRUE',
@@ -43,6 +43,7 @@ function rowToSession(row: string[]): Session {
     created_by: row[17] || null,
     created_at: row[18] ?? new Date().toISOString(),
     updated_at: row[19] ?? new Date().toISOString(),
+    speaker_ids: row[20] ? row[20].split(',').map((s) => s.trim()).filter(Boolean) : [],
   }
 }
 
@@ -93,7 +94,7 @@ export async function createSession(
   if (rows.length === 0) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `${TAB}!A1:T1`,
+      range: `${TAB}!A1:U1`,
       valueInputOption: 'RAW',
       requestBody: { values: [HEADER] },
     })
@@ -111,7 +112,7 @@ export async function createSession(
     data.category ?? '',
     data.audience_type ?? 'all',
     Array.isArray(data.audience_values) ? data.audience_values.join(',') : '',
-    data.room ?? '',
+    data.room_id ?? '',
     data.virtual_link ?? '',
     data.status ?? 'draft',
     data.is_common ? 'TRUE' : 'FALSE',
@@ -120,6 +121,7 @@ export async function createSession(
     data.created_by,
     now,
     now,
+    Array.isArray(data.speaker_ids) ? data.speaker_ids.join(',') : '',
   ]
 
   await sheets.spreadsheets.values.append({
@@ -156,7 +158,7 @@ export async function updateSession(
     updates.audience_values !== undefined
       ? updates.audience_values.join(',')
       : existing.audience_values.join(','),
-    updates.room !== undefined ? (updates.room ?? '') : (existing.room ?? ''),
+    updates.room_id !== undefined ? (updates.room_id ?? '') : (existing.room_id ?? ''),
     updates.virtual_link !== undefined ? (updates.virtual_link ?? '') : (existing.virtual_link ?? ''),
     updates.status ?? existing.status,
     (updates.is_common !== undefined ? updates.is_common : existing.is_common) ? 'TRUE' : 'FALSE',
@@ -165,12 +167,15 @@ export async function updateSession(
     existing.created_by ?? '',
     existing.created_at,
     new Date().toISOString(),
+    updates.speaker_ids !== undefined
+      ? updates.speaker_ids.join(',')
+      : existing.speaker_ids.join(','),
   ]
 
   const sheetRow = rowIndex + 1
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID,
-    range: `${TAB}!A${sheetRow}:T${sheetRow}`,
+    range: `${TAB}!A${sheetRow}:U${sheetRow}`,
     valueInputOption: 'RAW',
     requestBody: { values: [updatedRow] },
   })

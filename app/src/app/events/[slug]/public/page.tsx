@@ -2,6 +2,9 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getEventBySlug } from '@/lib/sheets/events'
 import { getSessionsByEvent } from '@/lib/sheets/sessions'
+import { getSpeakersByEvent } from '@/lib/sheets/speakers'
+import { getRoomsByLocation } from '@/lib/sheets/rooms'
+import { getLocationById } from '@/lib/sheets/locations'
 import { PublicAgenda } from './PublicAgenda'
 import { PrintButton } from './PrintButton'
 import type { Session } from '@/types'
@@ -50,7 +53,12 @@ export default async function PublicEventPage({ params }: Props) {
   const event = await getEventBySlug(params.slug)
   if (!event || event.status === 'archived') notFound()
 
-  const allSessions = await getSessionsByEvent(event.id)
+  const [allSessions, speakers, rooms, eventLocation] = await Promise.all([
+    getSessionsByEvent(event.id),
+    getSpeakersByEvent(event.id),
+    event.location_id ? getRoomsByLocation(event.location_id) : Promise.resolve([]),
+    event.location_id ? getLocationById(event.location_id) : Promise.resolve(null),
+  ])
   const confirmed = allSessions.filter((s) => s.status === 'confirmed')
 
   const dayMap = new Map<string, { label: string; sessions: Session[] }>()
@@ -82,6 +90,11 @@ export default async function PublicEventPage({ params }: Props) {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Program Agenda</p>
               <h1 className="text-2xl font-bold">{event.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">{dateRange} · {tzAbbr}</p>
+              {eventLocation && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {eventLocation.name}{eventLocation.address && ` — ${eventLocation.address}`}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {event.status === 'published' && (
@@ -107,6 +120,8 @@ export default async function PublicEventPage({ params }: Props) {
             allDays={days.map(([key, { label, sessions: ds }]) => ({ key, label, sessions: ds }))}
             timezone={event.primary_timezone}
             tzAbbr={tzAbbr}
+            rooms={rooms}
+            speakers={speakers}
           />
         )}
       </main>

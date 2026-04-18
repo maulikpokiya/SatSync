@@ -1,4 +1,4 @@
-import type { CategoryId, AudienceType } from '@/types'
+import type { CategoryId, AudienceType, RegionId } from '@/types'
 
 export interface Category {
   id: CategoryId
@@ -27,6 +27,21 @@ export const AUDIENCE_GROUPS: Record<Exclude<AudienceType, 'all' | 'custom'>, st
   gender: ['Vadil Bhaio', 'Mahila', 'Yuvati', 'Kishor', 'Kishori'],
   region: ['Chicago', 'NJ', 'Canada', 'UK', 'Australia', 'Remote'],
 }
+
+export const REGIONS: { id: RegionId; label: string }[] = [
+  { id: 'chicago',  label: 'Chicago' },
+  { id: 'houston',  label: 'Houston' },
+  { id: 'nj-east',  label: 'NJ-East' },
+  { id: 'nj-west',  label: 'NJ-West' },
+  { id: 'atlanta',  label: 'Atlanta' },
+  { id: 'london',   label: 'London' },
+  { id: 'toronto',  label: 'Toronto' },
+  { id: 'global',   label: 'Global' },
+]
+
+export const REGION_MAP = Object.fromEntries(
+  REGIONS.map((r) => [r.id, r])
+) as Record<RegionId, { id: RegionId; label: string }>
 
 export const TIMEZONES = [
   { label: 'America/Chicago (CDT/CST)', value: 'America/Chicago' },

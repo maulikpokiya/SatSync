@@ -7,12 +7,14 @@ import { Plus, Pencil, Trash2, ExternalLink, LayoutList, AlignJustify, Columns3 
 import { Button } from '@/components/ui/button'
 import { SessionEditor } from '@/components/sessions/SessionEditor'
 import { CATEGORIES, CATEGORY_MAP } from '@/lib/constants'
-import type { Event, Session } from '@/types'
+import type { Event, Session, Room, Speaker } from '@/types'
 
 interface AgendaClientProps {
   event: Event
   sessions: Session[]
   canEdit: boolean
+  rooms: Room[]
+  speakers: Speaker[]
 }
 
 function formatTime(utcIso: string | null, tz: string): string {
@@ -43,7 +45,19 @@ function groupByDay(sessions: Session[], tz: string): Map<string, { label: strin
   return map
 }
 
-export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
+export function AgendaClient({ event, sessions, canEdit, rooms, speakers }: AgendaClientProps) {
+  const roomMap = Object.fromEntries(rooms.map((r) => [r.id, r]))
+  const speakerMap = Object.fromEntries(speakers.map((s) => [s.id, s]))
+
+  function getRoomName(roomId: string | null): string | null {
+    if (!roomId) return null
+    return roomMap[roomId]?.name ?? roomId
+  }
+
+  function getSpeakerNames(ids: string[]): string[] {
+    return ids.map((id) => speakerMap[id]?.name).filter(Boolean) as string[]
+  }
+
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | undefined>()
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -125,7 +139,7 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
           </div>
           {/* Public view link */}
           <a
-            href={`/events/${event.slug}`}
+            href={`/events/${event.slug}/public`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-md px-2.5 py-1.5 transition-colors whitespace-nowrap"
@@ -235,11 +249,16 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
                                   {cat.label}
                                 </span>
                               )}
-                              {s.room && (
+                              {getRoomName(s.room_id) && (
                                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                  {s.room}
+                                  {getRoomName(s.room_id)}
                                 </span>
                               )}
+                              {getSpeakerNames(s.speaker_ids).map((name) => (
+                                <span key={name} className="text-xs px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700">
+                                  {name}
+                                </span>
+                              ))}
                               {s.status !== 'draft' && s.status !== 'confirmed' && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${s.status === 'cancelled' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
                                   {s.status}
@@ -277,6 +296,7 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
                 <th className="text-left font-medium pb-2 hidden sm:table-cell">Category</th>
                 <th className="text-left font-medium pb-2 hidden sm:table-cell">Audience</th>
                 <th className="text-left font-medium pb-2 hidden sm:table-cell">Room</th>
+                <th className="text-left font-medium pb-2 hidden sm:table-cell">Speakers</th>
                 <th className="text-left font-medium pb-2 w-16">Status</th>
                 {canEdit && <th className="w-16" />}
               </tr>
@@ -303,7 +323,10 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
                       {s.is_common ? 'All' : s.audience_values.join(', ') || '—'}
                     </td>
                     <td className="py-2 pr-4 text-xs text-muted-foreground hidden sm:table-cell align-middle">
-                      {s.room ?? '—'}
+                      {getRoomName(s.room_id) ?? '—'}
+                    </td>
+                    <td className="py-2 pr-4 text-xs text-muted-foreground hidden sm:table-cell align-middle">
+                      {getSpeakerNames(s.speaker_ids).join(', ') || '—'}
                     </td>
                     <td className="py-2 pr-4 align-middle">
                       <span className={`text-xs px-1.5 py-0.5 rounded ${
@@ -381,11 +404,16 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
                         All
                       </span>
                     )}
-                    {s.room && (
+                    {getRoomName(s.room_id) && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                        {s.room}
+                        {getRoomName(s.room_id)}
                       </span>
                     )}
+                    {getSpeakerNames(s.speaker_ids).map((name) => (
+                      <span key={name} className="text-xs px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                        {name}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
@@ -418,6 +446,8 @@ export function AgendaClient({ event, sessions, canEdit }: AgendaClientProps) {
         eventSlug={event.slug}
         eventTimezone={event.primary_timezone}
         session={editingSession}
+        rooms={rooms}
+        speakers={speakers}
       />
     </>
   )

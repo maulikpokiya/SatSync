@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     start_date?: string | null
     end_date?: string | null
     primary_timezone?: string
+    location_id?: string | null
     status?: string
   }
 
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
     start_date: body.start_date ?? null,
     end_date: body.end_date ?? null,
     primary_timezone: body.primary_timezone || 'America/Chicago',
+    location_id: body.location_id || null,
     status: (body.status as 'draft' | 'published' | 'archived') || 'draft',
     created_by: profile!.id,
   })

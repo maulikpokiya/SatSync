@@ -4,6 +4,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/config'
 import { getEventBySlug } from '@/lib/sheets/events'
 import { getSessionsByEvent } from '@/lib/sheets/sessions'
+import { getSpeakersByEvent } from '@/lib/sheets/speakers'
+import { getRoomsByLocation } from '@/lib/sheets/rooms'
+import { getAllLocations, getLocationById } from '@/lib/sheets/locations'
 import { getUserByEmail } from '@/lib/sheets/users'
 import { Topbar } from '@/components/layout/Topbar'
 import { EventModal } from '@/components/events/EventModal'
@@ -32,7 +35,13 @@ export default async function AgendaPage({ params }: Props) {
 
   if (!event) notFound()
 
-  const sessions = await getSessionsByEvent(event.id)
+  const [sessions, speakers, rooms, locations, eventLocation] = await Promise.all([
+    getSessionsByEvent(event.id),
+    getSpeakersByEvent(event.id),
+    event.location_id ? getRoomsByLocation(event.location_id) : Promise.resolve([]),
+    getAllLocations(),
+    event.location_id ? getLocationById(event.location_id) : Promise.resolve(null),
+  ])
   const canEdit = hasRole(profile?.role, 'editor')
   const canManageEvent = hasRole(profile?.role, 'event_admin')
 
@@ -46,13 +55,13 @@ export default async function AgendaPage({ params }: Props) {
       <Topbar
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
-          { label: event.title, href: `/events/${event.slug}/agenda` },
-          { label: 'Agenda' },
+          { label: event.title },
         ]}
         actions={
           canManageEvent ? (
             <EventModal
               event={event}
+              locations={locations}
               trigger={
                 <Button size="sm" variant="outline">
                   <Pencil className="mr-1.5 h-3.5 w-3.5" />
@@ -71,6 +80,7 @@ export default async function AgendaPage({ params }: Props) {
             <h1 className="text-xl font-bold">{event.title}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {dateRange || 'Dates TBD'} · {event.primary_timezone}
+              {eventLocation && ` · ${eventLocation.name}`}
             </p>
           </div>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
@@ -84,7 +94,7 @@ export default async function AgendaPage({ params }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <AgendaClient event={event} sessions={sessions} canEdit={canEdit} />
+        <AgendaClient event={event} sessions={sessions} canEdit={canEdit} rooms={rooms} speakers={speakers} />
       </div>
     </div>
   )

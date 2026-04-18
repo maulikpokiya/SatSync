@@ -28,6 +28,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     start_date?: string | null
     end_date?: string | null
     primary_timezone?: string
+    location_id?: string | null
     status?: string
   }
 
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     start_date: body.start_date !== undefined ? body.start_date : undefined,
     end_date: body.end_date !== undefined ? body.end_date : undefined,
     primary_timezone: body.primary_timezone,
+    location_id: body.location_id !== undefined ? (body.location_id || null) : undefined,
     status: body.status as 'draft' | 'published' | 'archived' | undefined,
   })
 

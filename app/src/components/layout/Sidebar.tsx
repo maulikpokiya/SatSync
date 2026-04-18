@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { signOut } from 'next-auth/react'
 import type { User, AppRole } from '@/types'
+import { hasRole } from '@/types'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -40,8 +41,9 @@ const NAV_ITEMS = [
   { href: '/profile', label: 'Profile', icon: UserCircle },
 ]
 
-const ADMIN_ITEMS = [
-  { href: '/admin/users', label: 'Users & Roles', icon: Shield },
+const ADMIN_ITEMS: { href: string; label: string; icon: typeof Shield; minRole: AppRole }[] = [
+  { href: '/admin/users', label: 'Users & Roles', icon: Shield, minRole: 'super_admin' },
+  { href: '/admin/locations', label: 'Locations', icon: MapPin, minRole: 'event_admin' },
 ]
 
 export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
@@ -103,47 +105,34 @@ export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
               </p>
             </div>
             {[
-              { href: `/events/${currentEventSlug}/agenda`, label: 'Agenda', icon: Calendar },
-              { href: `/events/${currentEventSlug}/speakers`, label: 'Speakers', icon: Users, stub: true },
-              { href: `/events/${currentEventSlug}/rooms`, label: 'Rooms', icon: MapPin, stub: true },
-            ].map(({ href, label, icon: Icon, stub }) => (
-              stub ? (
-                <span
-                  key={href}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/30 cursor-not-allowed select-none"
-                  title="Coming soon"
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {label}
-                  <span className="ml-auto text-xs">Soon</span>
-                </span>
-              ) : (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                    pathname === href || pathname.startsWith(href + '/')
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {label}
-                </Link>
-              )
+              { href: `/events/${currentEventSlug}`, label: 'Agenda', icon: Calendar },
+              { href: `/events/${currentEventSlug}/speakers`, label: 'Speakers', icon: Users },
+            ].map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                  pathname === href || pathname.startsWith(href + '/')
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </Link>
             ))}
           </>
         )}
 
-        {globalRole === 'super_admin' && (
+        {hasRole(globalRole, 'event_admin') && (
           <>
             <div className="pt-4 pb-1 px-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
                 Administration
               </p>
             </div>
-            {ADMIN_ITEMS.map(({ href, label, icon: Icon }) => (
+            {ADMIN_ITEMS.filter((item) => hasRole(globalRole, item.minRole)).map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
