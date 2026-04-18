@@ -139,7 +139,7 @@ export function AgendaClient({ event, sessions, canEdit, rooms, speakers }: Agen
           </div>
           {/* Public view link */}
           <a
-            href={`/events/${event.slug}`}
+            href={`/events/${event.slug}/public`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-md px-2.5 py-1.5 transition-colors whitespace-nowrap"
