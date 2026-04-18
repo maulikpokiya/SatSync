@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { Globe } from 'lucide-react'
 import { CATEGORY_MAP } from '@/lib/constants'
-import type { Session } from '@/types'
+import type { Session, Room, Speaker } from '@/types'
 
 interface Props {
   allDays: { key: string; label: string; sessions: Session[] }[]
   timezone: string
   tzAbbr: string
+  rooms: Room[]
+  speakers: Speaker[]
 }
 
 function fmt(utcIso: string | null, tz: string) {
@@ -25,7 +27,19 @@ function getTzAbbr(tz: string) {
   } catch { return tz }
 }
 
-export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
+export function PublicAgenda({ allDays, timezone, tzAbbr, rooms, speakers }: Props) {
+  const roomMap = Object.fromEntries(rooms.map((r) => [r.id, r]))
+  const speakerMap = Object.fromEntries(speakers.map((s) => [s.id, s]))
+
+  function getRoomName(roomId: string | null): string | null {
+    if (!roomId) return null
+    return roomMap[roomId]?.name ?? roomId
+  }
+
+  function getSpeakerNames(ids: string[]): string[] {
+    return ids.map((id) => speakerMap[id]?.name).filter(Boolean) as string[]
+  }
+
   const [useLocal, setUseLocal] = useState(false)
   const [localTz, setLocalTz] = useState<string | null>(null)
 
@@ -113,11 +127,16 @@ export function PublicAgenda({ allDays, timezone, tzAbbr }: Props) {
                               All
                             </span>
                           )}
-                          {s.room && (
+                          {getRoomName(s.room_id) && (
                             <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              {s.room}
+                              {getRoomName(s.room_id)}
                             </span>
                           )}
+                          {getSpeakerNames(s.speaker_ids).map((name) => (
+                            <span key={name} className="text-xs px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700">
+                              {name}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     )

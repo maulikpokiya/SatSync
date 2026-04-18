@@ -25,4 +25,7 @@ export const TABS = {
   users: 'users',
   events: 'events',
   sessions: 'sessions',
+  speakers: 'speakers',
+  locations: 'locations',
+  rooms: 'rooms',
 } as const

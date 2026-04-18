@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/config'
 import { getAllEvents } from '@/lib/sheets/events'
+import { getAllLocations } from '@/lib/sheets/locations'
 import { getUserByEmail } from '@/lib/sheets/users'
 import { Topbar } from '@/components/layout/Topbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,13 +20,14 @@ export default async function DashboardPage() {
   const profile = session?.user?.email ? await getUserByEmail(session.user.email) : null
   const canManageEvents = hasRole(profile?.role, 'event_admin')
 
-  const events = await getAllEvents()
+  const [events, locations] = await Promise.all([getAllEvents(), getAllLocations()])
+  const locationMap = Object.fromEntries(locations.map((l) => [l.id, l]))
 
   return (
     <>
       <Topbar
         breadcrumbs={[{ label: 'Dashboard' }]}
-        actions={canManageEvents ? <EventModal /> : undefined}
+        actions={canManageEvents ? <EventModal locations={locations} /> : undefined}
       />
       <div className="p-6 space-y-6">
         <div>
@@ -70,7 +72,10 @@ export default async function DashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-xs text-muted-foreground mb-4">{event.primary_timezone}</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {event.primary_timezone}
+                    {event.location_id && locationMap[event.location_id] && ` · ${locationMap[event.location_id].name}`}
+                  </p>
                   <div className="flex items-center gap-2">
                     <Button asChild size="sm" variant="outline" className="flex-1">
                       <Link href={`/events/${event.slug}/agenda`}>
@@ -80,6 +85,7 @@ export default async function DashboardPage() {
                     {canManageEvents && (
                       <EventModal
                         event={event}
+                        locations={locations}
                         trigger={
                           <Button size="sm" variant="ghost" className="px-2">
                             <Pencil className="h-3.5 w-3.5" />

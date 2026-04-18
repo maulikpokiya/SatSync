@@ -1,6 +1,6 @@
 export type {
-  AppRole, EventStatus, SessionStatus, AudienceType, CategoryId,
-  User, Event, Session,
+  AppRole, EventStatus, SessionStatus, AudienceType, CategoryId, RegionId,
+  User, Event, Session, Speaker, Location, Room,
 } from './database'
 
 export const ROLE_HIERARCHY: Record<import('./database').AppRole, number> = {

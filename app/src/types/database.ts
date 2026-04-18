@@ -11,6 +11,16 @@ export type CategoryId =
   | 'announcements'
   | 'travel'
 
+export type RegionId =
+  | 'chicago'
+  | 'houston'
+  | 'nj-east'
+  | 'nj-west'
+  | 'atlanta'
+  | 'london'
+  | 'toronto'
+  | 'global'
+
 /** Matches the columns in the `users` sheet tab */
 export interface User {
   id: string
@@ -32,6 +42,7 @@ export interface Event {
   start_date: string | null
   end_date: string | null
   primary_timezone: string
+  location_id: string | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -50,13 +61,43 @@ export interface Session {
   category: CategoryId | null
   audience_type: AudienceType
   audience_values: string[]        // parsed from comma-separated sheet cell
-  room: string | null
+  room_id: string | null
   virtual_link: string | null
   status: SessionStatus
   is_common: boolean
   color_override: string | null
   sort_order: number
   created_by: string | null
+  created_at: string
+  updated_at: string
+  speaker_ids: string[]            // parsed from comma-separated sheet cell
+}
+
+/** Matches the columns in the `speakers` sheet tab */
+export interface Speaker {
+  id: string
+  event_id: string
+  name: string
+  created_at: string
+  updated_at: string
+}
+
+/** Matches the columns in the `locations` sheet tab */
+export interface Location {
+  id: string
+  region: RegionId
+  name: string
+  address: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Matches the columns in the `rooms` sheet tab */
+export interface Room {
+  id: string
+  location_id: string
+  name: string
+  capacity: number | null
   created_at: string
   updated_at: string
 }

@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Pencil } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { TIMEZONES } from '@/lib/constants'
-import type { Event, EventStatus } from '@/types'
+import { TIMEZONES, REGIONS, REGION_MAP } from '@/lib/constants'
+import type { Event, EventStatus, Location } from '@/types'
 
 function slugify(title: string) {
   return title.toLowerCase().trim()
@@ -23,9 +23,10 @@ function slugify(title: string) {
 interface EventModalProps {
   event?: Event   // if provided, editing; otherwise creating
   trigger?: React.ReactNode
+  locations?: Location[]
 }
 
-export function EventModal({ event, trigger }: EventModalProps) {
+export function EventModal({ event, trigger, locations = [] }: EventModalProps) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
@@ -35,6 +36,7 @@ export function EventModal({ event, trigger }: EventModalProps) {
   const [startDate, setStartDate] = useState(event?.start_date ?? '')
   const [endDate, setEndDate] = useState(event?.end_date ?? '')
   const [timezone, setTimezone] = useState(event?.primary_timezone ?? 'America/Chicago')
+  const [locationId, setLocationId] = useState(event?.location_id ?? '')
   const [status, setStatus] = useState<EventStatus>(event?.status ?? 'draft')
   const [slugTouched, setSlugTouched] = useState(false)
 
@@ -43,12 +45,26 @@ export function EventModal({ event, trigger }: EventModalProps) {
     if (!slugTouched && !event) setSlug(slugify(title))
   }, [title, slugTouched, event])
 
+  // Group locations by region for the dropdown
+  const locationsByRegion = REGIONS
+    .map((r) => ({
+      ...r,
+      locs: locations.filter((l) => l.region === r.id),
+    }))
+    .filter((g) => g.locs.length > 0)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
     setSaving(true)
 
-    const payload = { title: title.trim(), slug: slug.trim(), start_date: startDate || null, end_date: endDate || null, primary_timezone: timezone, status }
+    const payload = {
+      title: title.trim(), slug: slug.trim(),
+      start_date: startDate || null, end_date: endDate || null,
+      primary_timezone: timezone,
+      location_id: locationId || null,
+      status,
+    }
     const res = event
       ? await fetch(`/api/events/${event.slug}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       : await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -73,10 +89,12 @@ export function EventModal({ event, trigger }: EventModalProps) {
       setStartDate(event.start_date ?? '')
       setEndDate(event.end_date ?? '')
       setTimezone(event.primary_timezone)
+      setLocationId(event.location_id ?? '')
       setStatus(event.status)
     } else if (!val && !event) {
       setTitle(''); setSlug(''); setStartDate(''); setEndDate('')
-      setTimezone('America/Chicago'); setStatus('draft'); setSlugTouched(false)
+      setTimezone('America/Chicago'); setLocationId('')
+      setStatus('draft'); setSlugTouched(false)
     }
   }
 
@@ -138,6 +156,26 @@ export function EventModal({ event, trigger }: EventModalProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="ev-loc">Location</Label>
+              <Select value={locationId} onValueChange={setLocationId}>
+                <SelectTrigger id="ev-loc"><SelectValue placeholder="Select location" /></SelectTrigger>
+                <SelectContent>
+                  {locationsByRegion.map((group) => (
+                    <div key={group.id}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group.label}</div>
+                      {group.locs.map((loc) => (
+                        <SelectItem key={loc.id} value={loc.id}>
+                          {loc.name}
+                          {loc.address && <span className="text-muted-foreground ml-1">— {loc.address}</span>}
+                        </SelectItem>
+                      ))}
+                    </div>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="ev-status">Status</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as EventStatus)}>
                 <SelectTrigger id="ev-status"><SelectValue /></SelectTrigger>
@@ -152,7 +190,7 @@ export function EventModal({ event, trigger }: EventModalProps) {
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={saving || !title.trim()}>
-                {saving ? 'Saving…' : event ? 'Save Changes' : 'Create Event'}
+                {saving ? 'Saving...' : event ? 'Save Changes' : 'Create Event'}
               </Button>
             </DialogFooter>
           </form>

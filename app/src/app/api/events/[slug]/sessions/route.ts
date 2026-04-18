@@ -31,10 +31,11 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     category?: CategoryId | null
     audience_type?: AudienceType
     audience_values?: string[]
-    room?: string | null
+    room_id?: string | null
     virtual_link?: string | null
     status?: SessionStatus
     is_common?: boolean
+    speaker_ids?: string[]
   }
 
   if (!body.title?.trim()) {
@@ -52,13 +53,14 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     category: body.category ?? null,
     audience_type: body.audience_type ?? 'all',
     audience_values: body.audience_values ?? [],
-    room: body.room ?? null,
+    room_id: body.room_id ?? null,
     virtual_link: body.virtual_link ?? null,
     status: body.status ?? 'draft',
     is_common: body.is_common ?? true,
     color_override: null,
     sort_order: 0,
     created_by: profile!.id,
+    speaker_ids: body.speaker_ids ?? [],
   })
 
   return NextResponse.json(newSession, { status: 201 })

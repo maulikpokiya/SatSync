@@ -3,9 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/config'
 import { getUserByEmail } from '@/lib/sheets/users'
 import { getEventBySlug } from '@/lib/sheets/events'
-import { getSessionById, updateSession, deleteSession } from '@/lib/sheets/sessions'
+import { getSpeakerById, updateSpeaker, deleteSpeaker } from '@/lib/sheets/speakers'
 import { hasRole } from '@/types'
-import type { AudienceType, CategoryId, SessionStatus } from '@/types'
 
 interface Ctx { params: { slug: string; id: string } }
 
@@ -25,45 +24,13 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const event = await getEventBySlug(params.slug)
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-  const existing = await getSessionById(params.id)
+  const existing = await getSpeakerById(params.id)
   if (!existing || existing.event_id !== event.id) {
-    return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Speaker not found' }, { status: 404 })
   }
 
-  const body = await request.json() as {
-    title?: string
-    description?: string | null
-    objectives?: string | null
-    prerequisites?: string | null
-    start_time?: string | null
-    end_time?: string | null
-    category?: CategoryId | null
-    audience_type?: AudienceType
-    audience_values?: string[]
-    room_id?: string | null
-    virtual_link?: string | null
-    status?: SessionStatus
-    is_common?: boolean
-    speaker_ids?: string[]
-  }
-
-  await updateSession(params.id, {
-    title: body.title?.trim(),
-    description: body.description,
-    objectives: body.objectives,
-    prerequisites: body.prerequisites,
-    start_time: body.start_time,
-    end_time: body.end_time,
-    category: body.category,
-    audience_type: body.audience_type,
-    audience_values: body.audience_values,
-    room_id: body.room_id,
-    virtual_link: body.virtual_link,
-    status: body.status,
-    is_common: body.is_common,
-    speaker_ids: body.speaker_ids,
-  })
-
+  const body = await request.json() as { name?: string }
+  await updateSpeaker(params.id, { name: body.name?.trim() })
   return NextResponse.json({ ok: true })
 }
 
@@ -77,11 +44,11 @@ export async function DELETE(_request: NextRequest, { params }: Ctx) {
   const event = await getEventBySlug(params.slug)
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-  const existing = await getSessionById(params.id)
+  const existing = await getSpeakerById(params.id)
   if (!existing || existing.event_id !== event.id) {
-    return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Speaker not found' }, { status: 404 })
   }
 
-  await deleteSession(params.id)
+  await deleteSpeaker(params.id)
   return NextResponse.json({ ok: true })
 }

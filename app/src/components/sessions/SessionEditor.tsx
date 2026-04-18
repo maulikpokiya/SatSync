@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { CATEGORIES, AUDIENCE_GROUPS } from '@/lib/constants'
-import type { Session, AudienceType, CategoryId, SessionStatus } from '@/types'
+import type { Session, AudienceType, CategoryId, SessionStatus, Room, Speaker } from '@/types'
 
 interface SessionEditorProps {
   open: boolean
@@ -19,12 +19,14 @@ interface SessionEditorProps {
   eventSlug: string
   eventTimezone: string
   session?: Session   // if provided, editing
+  rooms: Room[]
+  speakers: Speaker[]
 }
 
 const BLANK: Partial<Session> = {
   title: '', description: '', objectives: '', prerequisites: '',
   start_time: '', end_time: '', category: null,
-  audience_type: 'all', audience_values: [], room: '', virtual_link: '',
+  audience_type: 'all', audience_values: [], room_id: '', virtual_link: '',
   status: 'draft', is_common: true,
 }
 
@@ -66,7 +68,7 @@ function toUtcIso(localValue: string, tz: string): string {
   } catch { return '' }
 }
 
-export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, session }: SessionEditorProps) {
+export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, session, rooms, speakers }: SessionEditorProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
 
@@ -81,7 +83,8 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
   const [category, setCategory] = useState<CategoryId | ''>('')
   const [audienceType, setAudienceType] = useState<AudienceType>('all')
   const [audienceValues, setAudienceValues] = useState<string[]>([])
-  const [room, setRoom] = useState('')
+  const [roomId, setRoomId] = useState('')
+  const [selectedSpeakerIds, setSelectedSpeakerIds] = useState<string[]>([])
   const [virtualLink, setVirtualLink] = useState('')
   const [status, setStatus] = useState<SessionStatus>('draft')
   const [isCommon, setIsCommon] = useState(true)
@@ -101,12 +104,19 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       setCategory((session?.category ?? '') as CategoryId | '')
       setAudienceType(session?.audience_type ?? 'all')
       setAudienceValues(session?.audience_values ?? [])
-      setRoom(session?.room ?? '')
+      setRoomId(session?.room_id ?? '')
+      setSelectedSpeakerIds(session?.speaker_ids ?? [])
       setVirtualLink(session?.virtual_link ?? '')
       setStatus(session?.status ?? 'draft')
       setIsCommon(session?.is_common ?? true)
     }
   }, [open, session, eventTimezone])
+
+  function toggleSpeaker(id: string) {
+    setSelectedSpeakerIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+    )
+  }
 
   function toggleAudienceValue(val: string) {
     setAudienceValues((prev) =>
@@ -125,8 +135,9 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
       start_time: startDate ? toUtcIso(`${startDate}T${startClock || '00:00'}`, eventTimezone) || null : null,
       end_time: endDate ? toUtcIso(`${endDate}T${endClock || '00:00'}`, eventTimezone) || null : null,
       category: category || null, audience_type: audienceType,
-      audience_values: audienceValues, room: room || null,
+      audience_values: audienceValues, room_id: roomId || null,
       virtual_link: virtualLink || null, status, is_common: isCommon,
+      speaker_ids: selectedSpeakerIds,
     }
 
     const url = session
@@ -249,9 +260,33 @@ export function SessionEditor({ open, onOpenChange, eventSlug, eventTimezone, se
               <Input id="s-prereq" value={prerequisites} onChange={(e) => setPrerequisites(e.target.value)} />
             </div>
 
+            {speakers.length > 0 && (
+              <div className="space-y-2">
+                <Label>Speakers</Label>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {speakers.map((spk) => (
+                    <label key={spk.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={selectedSpeakerIds.includes(spk.id)}
+                        onCheckedChange={() => toggleSpeaker(spk.id)}
+                      />
+                      {spk.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="s-room">Room</Label>
-              <Input id="s-room" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Main Hall" />
+              <Select value={roomId} onValueChange={setRoomId}>
+                <SelectTrigger id="s-room"><SelectValue placeholder="Select room" /></SelectTrigger>
+                <SelectContent>
+                  {rooms.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
