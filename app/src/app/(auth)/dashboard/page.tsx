@@ -78,7 +78,7 @@ export default async function DashboardPage() {
                   </p>
                   <div className="flex items-center gap-2">
                     <Button asChild size="sm" variant="outline" className="flex-1">
-                      <Link href={`/events/${event.slug}/agenda`}>
+                      <Link href={`/events/${event.slug}`}>
                         View Agenda <ChevronRight className="ml-1 h-3.5 w-3.5" />
                       </Link>
                     </Button>

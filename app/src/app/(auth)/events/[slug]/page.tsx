@@ -55,8 +55,7 @@ export default async function AgendaPage({ params }: Props) {
       <Topbar
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
-          { label: event.title, href: `/events/${event.slug}/agenda` },
-          { label: 'Agenda' },
+          { label: event.title },
         ]}
         actions={
           canManageEvent ? (

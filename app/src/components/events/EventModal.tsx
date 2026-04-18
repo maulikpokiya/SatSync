@@ -76,7 +76,7 @@ export function EventModal({ event, trigger, locations = [] }: EventModalProps) 
       toast.success(event ? 'Event updated' : 'Event created')
       setOpen(false)
       router.refresh()
-      if (!event && body.slug) router.push(`/events/${body.slug}/agenda`)
+      if (!event && body.slug) router.push(`/events/${body.slug}`)
     }
     setSaving(false)
   }

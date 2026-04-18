@@ -105,7 +105,7 @@ export function Sidebar({ user, globalRole, eventSlug }: SidebarProps) {
               </p>
             </div>
             {[
-              { href: `/events/${currentEventSlug}/agenda`, label: 'Agenda', icon: Calendar },
+              { href: `/events/${currentEventSlug}`, label: 'Agenda', icon: Calendar },
               { href: `/events/${currentEventSlug}/speakers`, label: 'Speakers', icon: Users },
             ].map(({ href, label, icon: Icon }) => (
               <Link

@@ -37,7 +37,7 @@ export default async function SpeakersPage({ params }: Props) {
       <Topbar
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
-          { label: event.title, href: `/events/${event.slug}/agenda` },
+          { label: event.title, href: `/events/${event.slug}` },
           { label: 'Speakers' },
         ]}
       />
